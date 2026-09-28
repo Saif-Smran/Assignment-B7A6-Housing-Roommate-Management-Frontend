@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "code": "node scripts/generate-project-codebase.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "biome check",
