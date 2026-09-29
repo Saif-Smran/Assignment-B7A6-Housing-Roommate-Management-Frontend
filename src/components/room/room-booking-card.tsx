@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   Zap,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import * as React from "react";
 import type { PropertyDetails, Room } from "@/api/interfaces";
 import { RoomApplicationDialog } from "@/components/room/room-application-dialog";
@@ -17,6 +18,7 @@ import { RoomViewingDialog } from "@/components/room/room-viewing-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { isAuthenticated } from "@/lib/auth";
 
 interface RoomBookingCardProps {
   property: PropertyDetails;
@@ -28,11 +30,30 @@ export function RoomBookingCard({
   property,
   selectedRoom: initialSelectedRoom,
 }: RoomBookingCardProps) {
+  const router = useRouter();
   const [selectedRoom, setSelectedRoom] = React.useState<Room | null>(
     initialSelectedRoom || property.rooms?.[0] || null,
   );
   const [isApplyOpen, setIsApplyOpen] = React.useState(false);
   const [isViewingOpen, setIsViewingOpen] = React.useState(false);
+
+  const handleApplyClick = () => {
+    if (!isAuthenticated()) {
+      const currentPath = window.location.pathname + window.location.search;
+      router.push(`/login?redirect=${encodeURIComponent(currentPath)}`);
+      return;
+    }
+    setIsApplyOpen(true);
+  };
+
+  const handleViewingClick = () => {
+    if (!isAuthenticated()) {
+      const currentPath = window.location.pathname + window.location.search;
+      router.push(`/login?redirect=${encodeURIComponent(currentPath)}`);
+      return;
+    }
+    setIsViewingOpen(true);
+  };
 
   React.useEffect(() => {
     if (initialSelectedRoom) {
@@ -141,7 +162,7 @@ export function RoomBookingCard({
             <div className="space-y-2.5 pt-1">
               <Button
                 type="button"
-                onClick={() => setIsApplyOpen(true)}
+                onClick={handleApplyClick}
                 disabled={!isAvailable}
                 className="w-full h-11 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold text-sm shadow-md shadow-indigo-600/20 gap-2"
               >
@@ -152,7 +173,7 @@ export function RoomBookingCard({
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setIsViewingOpen(true)}
+                onClick={handleViewingClick}
                 className="w-full h-11 rounded-xl border-border/80 hover:bg-muted font-medium text-xs gap-2"
               >
                 <Eye className="h-4 w-4 text-purple-500" />
@@ -203,7 +224,7 @@ export function RoomBookingCard({
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => setIsViewingOpen(true)}
+                onClick={handleViewingClick}
                 className="w-full rounded-xl text-xs gap-1.5"
               >
                 <MessageCircle className="h-3.5 w-3.5 text-indigo-500" />
@@ -213,7 +234,7 @@ export function RoomBookingCard({
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => setIsViewingOpen(true)}
+                onClick={handleViewingClick}
                 className="w-full rounded-xl text-xs gap-1.5"
               >
                 <Phone className="h-3.5 w-3.5 text-purple-500" />
