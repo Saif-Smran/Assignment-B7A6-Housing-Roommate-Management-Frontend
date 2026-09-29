@@ -16,7 +16,6 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import * as React from "react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 export function Navbar() {
@@ -50,12 +49,6 @@ export function Navbar() {
                   Match
                 </span>
               </span>
-              <Badge
-                variant="accent"
-                className="px-1.5 py-0 text-[10px] uppercase font-bold tracking-wider"
-              >
-                B7A6
-              </Badge>
             </div>
             <span className="text-[10px] font-medium text-muted-foreground -mt-1 hidden sm:inline-block">
               Housing & Roommates

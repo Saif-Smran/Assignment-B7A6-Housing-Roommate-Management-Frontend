@@ -8,38 +8,13 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import type { PropertyDetails } from "@/api/interfaces";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 
 export interface PropertyCardProps {
-  property: {
-    id: string;
-    title: string;
-    description?: string | null;
-    address: string;
-    city: string;
-    state?: string | null;
-    propertyType: string;
-    amenities: string[];
-    isActive: boolean;
-    owner?: {
-      fullName: string;
-      email?: string;
-    };
-    images?: Array<{
-      url: string;
-      isPrimary?: boolean;
-    }>;
-    rooms?: Array<{
-      id: string;
-      roomNumber?: string | null;
-      roomType: string;
-      rentAmount: number;
-      capacity: number;
-      isAvailable: boolean;
-    }>;
-  };
+  property: PropertyDetails;
 }
 
 export function PropertyCard({ property }: PropertyCardProps) {

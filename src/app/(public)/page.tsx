@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getProperties } from "@/api/api";
+import type { PropertyDetails } from "@/api/interfaces";
 import { HomeHero } from "@/components/home-hero";
 import { PropertyCard } from "@/components/property-card";
 import { Badge } from "@/components/ui/badge";
@@ -24,65 +26,10 @@ export const metadata: Metadata = {
     "Find your ideal room, verified apartment, and compatible roommates. Enjoy seamless Stripe checkout, viewing requests, and direct maintenance management.",
 };
 
-interface ApiProperty {
-  id: string;
-  ownerId: string;
-  title: string;
-  description?: string | null;
-  address: string;
-  city: string;
-  state?: string | null;
-  country: string;
-  zipCode?: string | null;
-  propertyType: string;
-  amenities: string[];
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-  owner?: {
-    id?: string;
-    fullName: string;
-    email?: string;
-    role?: string;
-  };
-  images?: Array<{
-    id?: string;
-    url: string;
-    isPrimary?: boolean;
-  }>;
-  rooms?: Array<{
-    id: string;
-    roomNumber?: string | null;
-    roomType: string;
-    rentAmount: number;
-    capacity: number;
-    isAvailable: boolean;
-    description?: string | null;
-  }>;
-}
-
-async function getFeaturedProperties(): Promise<ApiProperty[]> {
-  const baseUrl =
-    process.env.NEXT_PUBLIC_API_BASE_URL || "https://b7-a6.vercel.app/api";
-  try {
-    const res = await fetch(`${baseUrl}/properties?limit=6`, {
-      next: { revalidate: 30 },
-    });
-    if (!res.ok) {
-      return [];
-    }
-    const data = await res.json();
-    if (data?.success && data?.data?.items) {
-      return data.data.items;
-    }
-    return [];
-  } catch (_error) {
-    return [];
-  }
-}
-
 export default async function HomePage() {
-  const featuredProperties = await getFeaturedProperties();
+  const res = await getProperties({ limit: 6 });
+  const featuredProperties: PropertyDetails[] =
+    res.success && res.data?.items ? res.data.items : [];
 
   return (
     <div className="flex flex-col w-full">
