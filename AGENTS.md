@@ -12,12 +12,12 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Before starting any task, every agent must follow this sequence:
 
-
 1. Run `bun run code` to refresh the codebase graph and snapshot with the latest files.
-2. Read `projectCodeBase.md` to understand the current project structure and Graphify outputs.
+2. Read `projectCodeBase.md` to understand the current project structure and Graphify outputs. *(Note: If the agent already has sufficient context from the current session/turn, it does not need to re-read `projectCodeBase.md`.)*
 3. Read `graphify-out/GRAPH_REPORT.md` and use `graphify-out/graph.json` or `graphify-out/graph.html` when architectural relationships need investigation.
 4. Use the refreshed snapshot and graph as the initial context, then inspect individual source files only when deeper task-specific details are needed.
 5. Complete the requested work and validate the changes.
 6. Run `bun run code` again after the work is complete so the graph artifacts and `projectCodeBase.md` contain the final project state.
 
-Do not begin implementation before completing the initial read, refresh, and reread. Do not finish a task without running the final refresh.
+Do not begin implementation before completing the initial read, refresh, and reread (unless you already have sufficient context). Do not finish a task without running the final refresh.
+

@@ -26,7 +26,7 @@ export function Navbar() {
     { href: "/", label: "Home", icon: Home },
     { href: "/properties", label: "Browse Rooms", icon: Search },
     { href: "/about", label: "About Us", icon: Info },
-    { href: "/contact", label: "Contact", icon: PhoneCall },
+    // { href: "/contact", label: "Contact", icon: PhoneCall },
     { href: "/faq", label: "FAQ", icon: HelpCircle },
   ];
 
