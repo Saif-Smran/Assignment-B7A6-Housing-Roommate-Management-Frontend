@@ -148,9 +148,47 @@ export async function getApplications(
   );
 }
 
+export async function createApplication(
+  payload: {
+    roomId: string;
+    moveInDate: string;
+    message?: string;
+  },
+  token?: string,
+): Promise<ApiResponse<Application>> {
+  return fetchApi<Application>(
+    "/applications",
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+    token,
+  );
+}
+
 // ---------------------------------------------
 // 4. Viewings & Maintenance Endpoints
 // ---------------------------------------------
+
+export async function createViewingRequest(
+  payload: {
+    propertyId: string;
+    roomId?: string;
+    preferredDate: string;
+    preferredTime: string;
+    notes?: string;
+  },
+  token?: string,
+): Promise<ApiResponse<ViewingRequest>> {
+  return fetchApi<ViewingRequest>(
+    "/viewing-requests",
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+    token,
+  );
+}
 
 export async function getViewingRequests(
   token?: string,

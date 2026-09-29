@@ -1,6 +1,6 @@
 import { HelpCircle } from "lucide-react";
 import type { Metadata } from "next";
-import { FaqAccordion } from "@/components/faq-accordion";
+import { FaqAccordion } from "@/components/shared/faq-accordion";
 
 export const metadata: Metadata = {
   title: "Frequently Asked Questions | UrbanMatch",

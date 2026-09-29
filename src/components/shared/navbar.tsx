@@ -7,7 +7,6 @@ import {
   Info,
   LogIn,
   Menu,
-  PhoneCall,
   PlusCircle,
   Search,
   UserPlus,
@@ -60,7 +59,10 @@ export function Navbar() {
         <nav className="hidden md:flex items-center gap-1 rounded-full border border-border/50 bg-muted/40 p-1.5 backdrop-blur-md">
           {navLinks.map((link) => {
             const Icon = link.icon;
-            const isActive = pathname === link.href;
+            const isActive =
+              pathname === link.href ||
+              (link.href === "/properties" &&
+                pathname.startsWith("/properties"));
             return (
               <Link
                 key={link.href}

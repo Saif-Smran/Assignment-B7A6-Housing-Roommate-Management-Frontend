@@ -165,7 +165,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
           size="sm"
           className="rounded-xl text-xs gap-1 bg-indigo-600 hover:bg-indigo-700 text-white font-medium shadow-sm"
         >
-          <Link href={`/properties/${property.id}`}>
+          <Link href={`/properties/details?id=${property.id}`}>
             View Rooms
             <ArrowRight className="h-3.5 w-3.5" />
           </Link>
