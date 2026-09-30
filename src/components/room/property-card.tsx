@@ -8,9 +8,11 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import type { PropertyCardProps, PropertyDetails } from "@/interfaces";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import type { PropertyCardProps } from "@/interfaces";
 export type { PropertyCardProps };
-
 
 export function PropertyCard({ property }: PropertyCardProps) {
   // Get primary image or first available image or fallback Unsplash property image

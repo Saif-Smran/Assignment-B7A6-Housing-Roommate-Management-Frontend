@@ -6,20 +6,48 @@ import {
   Home,
   Info,
   LogIn,
+  LogOut,
   Menu,
-  PlusCircle,
   Search,
+  UserCircle,
   UserPlus,
   X,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import * as React from "react";
+import { toast } from "react-toastify";
 import { Button } from "@/components/ui/button";
+import type { User } from "@/interfaces";
+import { getStoredUser, isAuthenticated, logoutUser } from "@/lib/auth";
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const [user, setUser] = React.useState<Partial<User> | null>(null);
   const pathname = usePathname();
+  const router = useRouter();
+
+  React.useEffect(() => {
+    const syncAuthState = () => {
+      setUser(isAuthenticated() ? getStoredUser<Partial<User>>() : null);
+    };
+
+    syncAuthState();
+    window.addEventListener("auth-state-changed", syncAuthState);
+    window.addEventListener("storage", syncAuthState);
+
+    return () => {
+      window.removeEventListener("auth-state-changed", syncAuthState);
+      window.removeEventListener("storage", syncAuthState);
+    };
+  }, []);
+
+  const handleLogout = () => {
+    logoutUser();
+    setMobileMenuOpen(false);
+    toast.success("You have been logged out.");
+    router.push("/");
+  };
 
   const navLinks = [
     { href: "/", label: "Home", icon: Home },
@@ -84,40 +112,57 @@ export function Navbar() {
 
         {/* Action Buttons */}
         <div className="hidden md:flex items-center gap-2.5">
-          <Button
-            asChild
-            variant="ghost"
-            size="sm"
-            className="text-xs font-medium gap-1.5 hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-full"
-          >
-            <Link href="/login">
-              <LogIn className="h-3.5 w-3.5" />
-              Sign In
-            </Link>
-          </Button>
-
-          <Button
-            asChild
-            variant="outline"
-            size="sm"
-            className="text-xs font-medium gap-1.5 rounded-full border-indigo-500/20 hover:border-indigo-500/40 hover:bg-indigo-500/5 text-indigo-600 dark:text-indigo-400"
-          >
-            <Link href="/register">
-              <UserPlus className="h-3.5 w-3.5" />
-              Register
-            </Link>
-          </Button>
-
-          <Button
-            asChild
-            size="sm"
-            className="text-xs font-medium gap-1.5 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-md shadow-indigo-600/20"
-          >
-            <Link href="/register?role=OWNER">
-              <PlusCircle className="h-3.5 w-3.5" />
-              Post a Room
-            </Link>
-          </Button>
+          {user ? (
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 rounded-full border border-border/60 bg-muted/40 px-3 py-1.5">
+                <UserCircle className="h-4 w-4 text-indigo-600" />
+                <span className="max-w-32 truncate text-xs font-semibold">
+                  {user.fullName || user.email || "Signed in"}
+                </span>
+                {user.role && (
+                  <span className="text-[10px] uppercase text-muted-foreground">
+                    {user.role}
+                  </span>
+                )}
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleLogout}
+                className="gap-1.5 rounded-full text-xs font-medium"
+              >
+                <LogOut className="h-3.5 w-3.5" />
+                Logout
+              </Button>
+            </div>
+          ) : (
+            <>
+              <Button
+                asChild
+                variant="ghost"
+                size="sm"
+                className="gap-1.5 rounded-full text-xs font-medium hover:bg-indigo-500/10 hover:text-indigo-600"
+              >
+                <Link href="/login">
+                  <LogIn className="h-3.5 w-3.5" />
+                  Sign In
+                </Link>
+              </Button>
+              <Button
+                asChild
+                variant="outline"
+                size="sm"
+                className="gap-1.5 rounded-full border-indigo-500/20 text-xs font-medium text-indigo-600"
+              >
+                <Link href="/register">
+                  <UserPlus className="h-3.5 w-3.5" />
+                  Register
+                </Link>
+              </Button>
+            </>
+          )}
+          
         </div>
 
         {/* Mobile Hamburger Toggle */}
@@ -166,44 +211,54 @@ export function Navbar() {
             })}
 
             <div className="pt-4 border-t border-border/60 flex flex-col gap-2">
-              <Button
-                asChild
-                size="sm"
-                className="w-full justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-sm"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <Link href="/register?role=OWNER">
-                  <PlusCircle className="h-4 w-4" />
-                  Post a Room / List Property
-                </Link>
-              </Button>
-
-              <div className="grid grid-cols-2 gap-2 pt-1">
-                <Button
-                  asChild
-                  variant="outline"
-                  size="sm"
-                  className="w-full justify-center gap-1.5 rounded-xl"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <Link href="/login">
-                    <LogIn className="h-3.5 w-3.5" />
-                    Sign In
-                  </Link>
-                </Button>
-                <Button
-                  asChild
-                  variant="secondary"
-                  size="sm"
-                  className="w-full justify-center gap-1.5 rounded-xl"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <Link href="/register">
-                    <UserPlus className="h-3.5 w-3.5" />
-                    Register
-                  </Link>
-                </Button>
-              </div>
+              {user ? (
+                <>
+                  <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-muted/40 px-3 py-2 text-sm">
+                    <UserCircle className="h-4 w-4 text-indigo-600" />
+                    <span className="truncate font-semibold">
+                      {user.fullName || user.email || "Signed in"}
+                    </span>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleLogout}
+                    className="w-full justify-center gap-1.5 rounded-xl"
+                  >
+                    <LogOut className="h-3.5 w-3.5" />
+                    Logout
+                  </Button>
+                </>
+              ) : (
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-center gap-1.5 rounded-xl"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <Link href="/login">
+                      <LogIn className="h-3.5 w-3.5" />
+                      Sign In
+                    </Link>
+                  </Button>
+                  <Button
+                    asChild
+                    variant="secondary"
+                    size="sm"
+                    className="w-full justify-center gap-1.5 rounded-xl"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <Link href="/register">
+                      <UserPlus className="h-3.5 w-3.5" />
+                      Register
+                    </Link>
+                  </Button>
+                </div>
+              )}
+              
             </div>
           </div>
         </div>

@@ -10,8 +10,7 @@ export interface FaqItem {
 }
 
 export interface AccordionItemProps {
-  question: string;
-  answer: string;
+  children?: React.ReactNode;
   isOpen: boolean;
   onToggle: () => void;
 }

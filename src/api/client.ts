@@ -1,4 +1,4 @@
-import type { ApiResponse } from "./interfaces";
+import type { ApiResponse } from "@/interfaces";
 
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || "https://b7-a6.vercel.app/api";

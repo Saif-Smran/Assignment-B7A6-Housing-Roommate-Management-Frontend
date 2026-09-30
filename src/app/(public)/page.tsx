@@ -12,13 +12,13 @@ import {
 } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getProperties } from "@/api/api";
-import type { PropertyDetails } from "@/api/interfaces";
+import { getProperties } from "@/api/properties.api";
 import { HomeHero } from "@/components/home/home-hero";
 import { PropertyCard } from "@/components/room/property-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import type { PropertyDetails } from "@/interfaces";
 
 export const metadata: Metadata = {
   title: "UrbanMatch | Premium Housing & Roommate Management Platform",

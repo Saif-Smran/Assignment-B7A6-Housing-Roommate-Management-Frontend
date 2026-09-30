@@ -1,10 +1,10 @@
-import { fetchApi } from "./client";
 import type {
   ApiResponse,
   Application,
   ApplicationFilterParams,
   PaginatedData,
-} from "./interfaces";
+} from "@/interfaces";
+import { fetchApi } from "./client";
 
 export async function getMyApplications(
   token?: string,

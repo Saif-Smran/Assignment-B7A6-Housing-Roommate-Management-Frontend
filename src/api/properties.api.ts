@@ -1,11 +1,11 @@
-import { fetchApi } from "./client";
 import type {
   ApiResponse,
   PaginatedData,
   PropertyDetails,
   PropertyFilterParams,
   Room,
-} from "./interfaces";
+} from "@/interfaces";
+import { fetchApi } from "./client";
 
 export async function getProperties(
   params?: PropertyFilterParams,

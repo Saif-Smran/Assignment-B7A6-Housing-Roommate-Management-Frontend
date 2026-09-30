@@ -1,5 +1,11 @@
-import type { PaymentGateway, PaymentStatus, PaymentType } from "@/types/enums";
-import type { JsonValue } from "@/types/payment";
+import type {
+  PaymentGateway,
+  PaymentStatus,
+  PaymentType,
+} from "./enums.interface";
+
+export type JsonPrimitive = string | number | boolean | null;
+export type JsonValue = JsonPrimitive | JsonObject | JsonValue[];
 
 export interface JsonObject {
   [key: string]: JsonValue;

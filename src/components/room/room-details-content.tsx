@@ -28,11 +28,11 @@ import {
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import * as React from "react";
-import type { PropertyDetails, Room } from "@/api/interfaces";
 import { RoomBookingCard } from "@/components/room/room-booking-card";
 import { RoomGallery } from "@/components/room/room-gallery";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import type { PropertyDetails, Room } from "@/interfaces";
 
 const PropertyMap = dynamic(() => import("@/components/room/property-map"), {
   ssr: false,

@@ -1,4 +1,4 @@
-import type { ViewingStatus } from "@/types/enums";
+import type { ViewingStatus } from "./enums.interface";
 
 export interface ViewingRequest {
   id: string;

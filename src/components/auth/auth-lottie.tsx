@@ -1,8 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Lottie } from "lottie-react";
-import { ShieldCheck, Sparkles, Users, Key, Building, CheckCircle2 } from "lucide-react";
+import {
+  Building,
+  CheckCircle2,
+  Key,
+  ShieldCheck,
+  Sparkles,
+  Users,
+} from "lucide-react";
+import { useEffect, useState } from "react";
 
 // Modern vector-driven Lottie JSON data for Login (Security, Keys & Urban Housing)
 const loginLottieData = {
@@ -28,8 +35,8 @@ const loginLottieData = {
           a: 1,
           k: [
             { t: 0, s: [0], e: [360] },
-            { t: 120, s: [360] }
-          ]
+            { t: 120, s: [360] },
+          ],
         },
         p: { a: 0, k: [250, 250, 0] },
         a: { a: 0, k: [0, 0, 0] },
@@ -38,9 +45,9 @@ const loginLottieData = {
           k: [
             { t: 0, s: [90, 90, 100], e: [105, 105, 100] },
             { t: 60, s: [105, 105, 100], e: [90, 90, 100] },
-            { t: 120, s: [90, 90, 100] }
-          ]
-        }
+            { t: 120, s: [90, 90, 100] },
+          ],
+        },
       },
       shapes: [
         {
@@ -50,24 +57,24 @@ const loginLottieData = {
               d: 1,
               ty: "el",
               s: { a: 0, k: [320, 320] },
-              p: { a: 0, k: [0, 0] }
+              p: { a: 0, k: [0, 0] },
             },
             {
               ty: "st",
               c: { a: 0, k: [0.38, 0.4, 0.96, 1] },
               w: 4,
               lc: 2,
-              lj: 2
+              lj: 2,
             },
             {
               ty: "tr",
               p: { a: 0, k: [0, 0] },
               r: { a: 0, k: 0 },
-              s: { a: 0, k: [100, 100] }
-            }
-          ]
-        }
-      ]
+              s: { a: 0, k: [100, 100] },
+            },
+          ],
+        },
+      ],
     },
     {
       ddd: 0,
@@ -83,11 +90,11 @@ const loginLottieData = {
           k: [
             { t: 0, s: [250, 240, 0], e: [250, 260, 0] },
             { t: 60, s: [250, 260, 0], e: [250, 240, 0] },
-            { t: 120, s: [250, 240, 0] }
-          ]
+            { t: 120, s: [250, 240, 0] },
+          ],
         },
         a: { a: 0, k: [0, 0, 0] },
-        s: { a: 0, k: [100, 100, 100] }
+        s: { a: 0, k: [100, 100, 100] },
       },
       shapes: [
         {
@@ -100,23 +107,23 @@ const loginLottieData = {
               pt: { a: 0, k: 3 },
               r: { a: 0, k: 120 },
               ir: { a: 0, k: 60 },
-              or: { a: 0, k: 120 }
+              or: { a: 0, k: 120 },
             },
             {
               ty: "fl",
-              c: { a: 0, k: [0.49, 0.36, 0.95, 1] }
+              c: { a: 0, k: [0.49, 0.36, 0.95, 1] },
             },
             {
               ty: "tr",
               p: { a: 0, k: [0, 0] },
               r: { a: 0, k: 0 },
-              s: { a: 0, k: [100, 100] }
-            }
-          ]
-        }
-      ]
-    }
-  ]
+              s: { a: 0, k: [100, 100] },
+            },
+          ],
+        },
+      ],
+    },
+  ],
 };
 
 // Modern vector-driven Lottie JSON data for Registration (Roommate Match & City Building)
@@ -143,8 +150,8 @@ const registerLottieData = {
           a: 1,
           k: [
             { t: 0, s: [0], e: [-360] },
-            { t: 120, s: [-360] }
-          ]
+            { t: 120, s: [-360] },
+          ],
         },
         p: { a: 0, k: [250, 250, 0] },
         a: { a: 0, k: [0, 0, 0] },
@@ -153,9 +160,9 @@ const registerLottieData = {
           k: [
             { t: 0, s: [85, 85, 100], e: [100, 100, 100] },
             { t: 60, s: [100, 100, 100], e: [85, 85, 100] },
-            { t: 120, s: [85, 85, 100] }
-          ]
-        }
+            { t: 120, s: [85, 85, 100] },
+          ],
+        },
       },
       shapes: [
         {
@@ -165,30 +172,29 @@ const registerLottieData = {
               d: 1,
               ty: "el",
               s: { a: 0, k: [340, 340] },
-              p: { a: 0, k: [0, 0] }
+              p: { a: 0, k: [0, 0] },
             },
             {
               ty: "st",
               c: { a: 0, k: [0.93, 0.28, 0.6, 1] },
               w: 3,
               lc: 2,
-              lj: 2
+              lj: 2,
             },
             {
               ty: "tr",
               p: { a: 0, k: [0, 0] },
               r: { a: 0, k: 0 },
-              s: { a: 0, k: [100, 100] }
-            }
-          ]
-        }
-      ]
-    }
-  ]
+              s: { a: 0, k: [100, 100] },
+            },
+          ],
+        },
+      ],
+    },
+  ],
 };
 
 import type { AuthLottieProps } from "@/interfaces";
-
 
 export function AuthLottie({ type }: AuthLottieProps) {
   const [mounted, setMounted] = useState(false);
@@ -226,7 +232,11 @@ export function AuthLottie({ type }: AuthLottieProps) {
         {/* Floating Custom Hero Badge */}
         <div className="mt-4 flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 backdrop-blur-md border border-white/15 text-xs font-semibold text-white shadow-lg animate-bounce">
           <Sparkles className="h-4 w-4 text-amber-300" />
-          <span>{isLogin ? "Welcome Back to UrbanMatch!" : "Join 15,000+ Room Hunters!"}</span>
+          <span>
+            {isLogin
+              ? "Welcome Back to UrbanMatch!"
+              : "Join 15,000+ Room Hunters!"}
+          </span>
         </div>
 
         {/* Dynamic Descriptive Text */}
@@ -247,7 +257,11 @@ export function AuthLottie({ type }: AuthLottieProps) {
         <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
           <div className="flex items-center gap-2.5 rounded-2xl bg-white/5 p-3 backdrop-blur-md border border-white/10 transition-all hover:bg-white/10 hover:border-indigo-500/30">
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-500/20 text-indigo-400">
-              {isLogin ? <ShieldCheck className="h-4 w-4" /> : <Users className="h-4 w-4" />}
+              {isLogin ? (
+                <ShieldCheck className="h-4 w-4" />
+              ) : (
+                <Users className="h-4 w-4" />
+              )}
             </div>
             <div className="text-left">
               <p className="text-xs font-semibold text-white">
@@ -261,7 +275,11 @@ export function AuthLottie({ type }: AuthLottieProps) {
 
           <div className="flex items-center gap-2.5 rounded-2xl bg-white/5 p-3 backdrop-blur-md border border-white/10 transition-all hover:bg-white/10 hover:border-purple-500/30">
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-purple-500/20 text-purple-400">
-              {isLogin ? <Key className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
+              {isLogin ? (
+                <Key className="h-4 w-4" />
+              ) : (
+                <CheckCircle2 className="h-4 w-4" />
+              )}
             </div>
             <div className="text-left">
               <p className="text-xs font-semibold text-white">

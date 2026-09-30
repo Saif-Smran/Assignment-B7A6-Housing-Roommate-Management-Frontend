@@ -1,15 +1,25 @@
-import { fetchApi } from "./client";
 import type {
   ApiResponse,
   AuthResponseData,
+  GoogleAuthPayload,
   LoginPayload,
   RegisterPayload,
 } from "@/interfaces";
-import type { Role } from "@/types";
+import { fetchApi } from "./client";
+
+export async function demoLogin(role: import("@/interfaces").Role) {
+  const response = await fetch("/api/demo-login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ role }),
+  });
+
+  return (await response.json()) as ApiResponse<AuthResponseData>;
+}
 
 // User Login API
 export async function loginUser(
-  payload: LoginPayload
+  payload: LoginPayload,
 ): Promise<ApiResponse<AuthResponseData>> {
   return fetchApi<AuthResponseData>("/auth/login", {
     method: "POST",
@@ -19,7 +29,7 @@ export async function loginUser(
 
 // User Registration API
 export async function registerUser(
-  payload: RegisterPayload
+  payload: RegisterPayload,
 ): Promise<ApiResponse<AuthResponseData>> {
   return fetchApi<AuthResponseData>("/auth/register", {
     method: "POST",
@@ -28,10 +38,9 @@ export async function registerUser(
 }
 
 // Google Authentication API
-export async function googleAuth(payload: {
-  token: string;
-  role?: Role;
-}): Promise<ApiResponse<AuthResponseData>> {
+export async function googleAuth(
+  payload: GoogleAuthPayload,
+): Promise<ApiResponse<AuthResponseData>> {
   return fetchApi<AuthResponseData>("/auth/google", {
     method: "POST",
     body: JSON.stringify(payload),
@@ -40,7 +49,7 @@ export async function googleAuth(payload: {
 
 // Forgot Password API
 export async function requestPasswordReset(
-  email: string
+  email: string,
 ): Promise<ApiResponse<{ message: string }>> {
   return fetchApi<{ message: string }>("/auth/forgot-password", {
     method: "POST",

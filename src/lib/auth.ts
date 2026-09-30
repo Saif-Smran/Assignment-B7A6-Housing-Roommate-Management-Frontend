@@ -31,6 +31,8 @@ export function setAuthToken(token: string, user?: unknown): void {
   if (user) {
     localStorage.setItem("user", JSON.stringify(user));
   }
+
+  window.dispatchEvent(new Event("auth-state-changed"));
 }
 
 export function getAuthToken(): string | null {
@@ -62,7 +64,9 @@ export function logoutUser(): void {
   localStorage.removeItem("authToken");
   localStorage.removeItem("user");
 
-  document.cookie = "accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+  document.cookie =
+    "accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
   document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
   document.cookie = "authToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+  window.dispatchEvent(new Event("auth-state-changed"));
 }

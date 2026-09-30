@@ -2,11 +2,11 @@ import { ChevronLeft, ChevronRight, FilterX, Sparkles } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
-import { getProperties } from "@/api/api";
-import type { PropertyDetails } from "@/api/interfaces";
+import { getProperties } from "@/api/properties.api";
 import { PropertyCard } from "@/components/room/property-card";
 import { RoomsFilterBar } from "@/components/room/rooms-filter-bar";
 import { Button } from "@/components/ui/button";
+import type { PropertyDetails } from "@/interfaces";
 
 export const metadata: Metadata = {
   title: "Browse Properties & Rooms | UrbanMatch",

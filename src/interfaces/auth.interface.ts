@@ -3,21 +3,27 @@ import type { User } from "./user.interface";
 
 export interface LoginPayload {
   email: string;
-  password?: string;
+  password: string;
+  role?: Role;
 }
 
 export interface RegisterPayload {
   fullName: string;
   email: string;
-  password?: string;
+  password: string;
   phone?: string;
-  role?: Role;
+  role: Role;
 }
 
 export interface AuthResponseData {
   token?: string;
   accessToken?: string;
-  user: User;
+  user?: User;
+}
+
+export interface GoogleAuthPayload {
+  idToken: string;
+  role?: Role;
 }
 
 export interface ForgotPasswordPayload {

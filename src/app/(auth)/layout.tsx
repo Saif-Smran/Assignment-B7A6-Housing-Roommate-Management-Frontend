@@ -1,11 +1,11 @@
+import { ArrowLeft, Building2 } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Building2, ArrowLeft } from "lucide-react";
-import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
   title: "Authentication | UrbanMatch Housing & Roommates",
-  description: "Sign in or create an account on UrbanMatch to find rooms, list properties, and match with roommates.",
+  description:
+    "Sign in or create an account on UrbanMatch to find rooms, list properties, and match with roommates.",
 };
 
 export default function AuthLayout({
@@ -15,9 +15,6 @@ export default function AuthLayout({
 }) {
   return (
     <div className="relative min-h-screen w-full bg-background flex flex-col justify-between overflow-x-hidden selection:bg-indigo-500 selection:text-white">
-      {/* Toast Notification Container */}
-      <Toaster position="top-right" richColors closeButton />
-
       {/* Decorative Background Mesh & Grid Patterns */}
       <div className="absolute inset-0 bg-[radial-gradient(#3b82f6_1px,transparent_1px)] [background-size:24px_24px] opacity-10 pointer-events-none" />
       <div className="absolute top-0 left-1/4 h-96 w-96 rounded-full bg-indigo-600/15 blur-[120px] pointer-events-none" />
@@ -56,14 +53,15 @@ export default function AuthLayout({
 
       {/* Main Content Area */}
       <main className="relative z-10 flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8">
-        <div className="w-full max-w-5xl">
-          {children}
-        </div>
+        <div className="w-full max-w-5xl">{children}</div>
       </main>
 
       {/* Footer copyright */}
       <footer className="relative z-20 py-6 text-center text-xs text-muted-foreground">
-        <p>© {new Date().getFullYear()} UrbanMatch Housing Inc. All rights reserved.</p>
+        <p>
+          © {new Date().getFullYear()} UrbanMatch Housing Inc. All rights
+          reserved.
+        </p>
       </footer>
     </div>
   );

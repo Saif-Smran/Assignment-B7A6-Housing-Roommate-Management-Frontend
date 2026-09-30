@@ -12,12 +12,12 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import * as React from "react";
-import type { PropertyDetails, Room } from "@/api/interfaces";
 import { RoomApplicationDialog } from "@/components/room/room-application-dialog";
 import { RoomViewingDialog } from "@/components/room/room-viewing-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import type { PropertyDetails, Room } from "@/interfaces";
 import { isAuthenticated } from "@/lib/auth";
 
 interface RoomBookingCardProps {

@@ -11,10 +11,10 @@ import {
   X,
 } from "lucide-react";
 import * as React from "react";
-import { createViewingRequest } from "@/api/api";
-import type { PropertyDetails, Room } from "@/api/interfaces";
+import { createViewingRequest } from "@/api/viewings.api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import type { PropertyDetails, Room } from "@/interfaces";
 
 interface RoomViewingDialogProps {
   property: PropertyDetails;

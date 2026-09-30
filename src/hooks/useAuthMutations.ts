@@ -1,12 +1,35 @@
 "use client";
 
 import { useMutation } from "@tanstack/react-query";
-import { loginUser, registerUser, requestPasswordReset } from "@/api/auth";
-import type { LoginPayload, RegisterPayload } from "@/interfaces";
+import {
+  demoLogin,
+  googleAuth,
+  loginUser,
+  registerUser,
+  requestPasswordReset,
+} from "@/api/auth.api";
+import type {
+  GoogleAuthPayload,
+  LoginPayload,
+  RegisterPayload,
+} from "@/interfaces";
 
 export function useLoginMutation() {
   return useMutation({
-    mutationFn: (payload: LoginPayload) => loginUser(payload),
+    mutationFn: ({ email, password }: LoginPayload) =>
+      loginUser({ email, password }),
+  });
+}
+
+export function useGoogleAuthMutation() {
+  return useMutation({
+    mutationFn: (payload: GoogleAuthPayload) => googleAuth(payload),
+  });
+}
+
+export function useDemoLoginMutation() {
+  return useMutation({
+    mutationFn: (role: import("@/interfaces").Role) => demoLogin(role),
   });
 }
 

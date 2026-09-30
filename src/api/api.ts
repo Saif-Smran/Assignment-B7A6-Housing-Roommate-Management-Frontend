@@ -1,9 +1,7 @@
-export * from "./applications";
-export * from "./auth";
+export * from "./applications.api";
+export * from "./auth.api";
 export * from "./client";
-export * from "./interfaces";
-export * from "./payments";
-export * from "./properties";
-export * from "./user";
-export * from "./viewings";
-
+export * from "./payments.api";
+export * from "./properties.api";
+export * from "./user.api";
+export * from "./viewings.api";

@@ -1,10 +1,14 @@
 import { ArrowLeft, Building2 } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getProperties, getPropertyById, getRoomById } from "@/api/api";
-import type { PropertyDetails } from "@/api/interfaces";
+import {
+  getProperties,
+  getPropertyById,
+  getRoomById,
+} from "@/api/properties.api";
 import { RoomDetailsContent } from "@/components/room/room-details-content";
 import { Button } from "@/components/ui/button";
+import type { PropertyDetails } from "@/interfaces";
 
 interface PropertiesDetailsPageProps {
   searchParams: Promise<{

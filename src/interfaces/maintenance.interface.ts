@@ -1,4 +1,4 @@
-import type { MaintenanceStatus, Priority } from "@/types";
+import type { MaintenanceStatus, Priority } from "./enums.interface";
 
 export interface MaintenanceRequest {
   id: string;

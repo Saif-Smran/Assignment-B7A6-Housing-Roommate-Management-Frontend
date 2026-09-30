@@ -10,10 +10,10 @@ import {
   X,
 } from "lucide-react";
 import * as React from "react";
-import { createApplication } from "@/api/api";
-import type { PropertyDetails, Room } from "@/api/interfaces";
+import { createApplication } from "@/api/applications.api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import type { PropertyDetails, Room } from "@/interfaces";
 
 interface RoomApplicationDialogProps {
   property: PropertyDetails;

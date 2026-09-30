@@ -1,4 +1,4 @@
-import type { BillStatus } from "@/types";
+import type { BillStatus } from "./enums.interface";
 
 export interface UtilityBill {
   id: string;

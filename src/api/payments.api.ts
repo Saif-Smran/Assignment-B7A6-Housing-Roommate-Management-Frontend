@@ -1,11 +1,11 @@
-import { fetchApi } from "./client";
 import type {
   ApiResponse,
   PaginatedData,
   Payment,
   PaymentFilterParams,
   PaymentType,
-} from "./interfaces";
+} from "@/interfaces";
+import { fetchApi } from "./client";
 
 export async function getMyPayments(
   params?: PaymentFilterParams,

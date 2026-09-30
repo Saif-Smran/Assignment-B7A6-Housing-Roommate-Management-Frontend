@@ -1,10 +1,10 @@
-import { fetchApi } from "./client";
 import type {
   ApiResponse,
   MaintenanceRequest,
   PaginatedData,
   ViewingRequest,
-} from "./interfaces";
+} from "@/interfaces";
+import { fetchApi } from "./client";
 
 export async function createViewingRequest(
   payload: {

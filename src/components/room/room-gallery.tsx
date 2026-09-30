@@ -10,8 +10,8 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import * as React from "react";
-import type { PropertyImage } from "@/api/interfaces";
 import { Badge } from "@/components/ui/badge";
+import type { PropertyImage } from "@/interfaces";
 
 interface RoomGalleryProps {
   images?: PropertyImage[];

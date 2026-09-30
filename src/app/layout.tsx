@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { DM_Sans, Geist, Geist_Mono, Outfit } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
+import Providers from "@/providers";
 
 const outfitHeading = Outfit({
   subsets: ["latin"],
@@ -39,7 +40,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         outfitHeading.variable,
       )}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }
