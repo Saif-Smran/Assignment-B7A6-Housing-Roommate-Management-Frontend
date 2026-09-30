@@ -1,8 +1,2 @@
-export interface Notification {
-  id: string;
-  receiverId: string;
-  title: string;
-  message: string;
-  isRead: boolean;
-  createdAt: string;
-}
+import type { Notification } from "@/interfaces";
+export type { Notification };

@@ -14,12 +14,12 @@ import { AccordionItem } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-export interface FaqItem {
-  id: string;
+import type { FaqItem as BaseFaqItem } from "@/interfaces";
+
+export type FaqItem = Omit<BaseFaqItem, "category"> & {
   category: "tenant" | "owner" | "payment" | "security";
-  question: string;
-  answer: string;
-}
+};
+
 
 const FAQ_DATA: FaqItem[] = [
   // Tenant FAQs
