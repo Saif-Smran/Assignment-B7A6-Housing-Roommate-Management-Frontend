@@ -1,3 +1,16 @@
+import type { Role } from "@/interfaces";
+
+export function getDashboardPath(role?: Role | string | null): string {
+  switch (role?.toUpperCase()) {
+    case "ADMIN":
+      return "/dashboard/admin";
+    case "OWNER":
+      return "/dashboard/owner";
+    default:
+      return "/dashboard/tenant";
+  }
+}
+
 export function isAuthenticated(): boolean {
   if (typeof window === "undefined") return false;
 

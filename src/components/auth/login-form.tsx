@@ -26,7 +26,7 @@ import {
   useLoginMutation,
 } from "@/hooks/useAuthMutations";
 import type { AuthResponseData, Role } from "@/interfaces";
-import { setAuthToken } from "@/lib/auth";
+import { getDashboardPath, setAuthToken } from "@/lib/auth";
 import { forgotPasswordSchema, loginSchema } from "@/validation";
 
 const demoAccounts: { role: Role; label: string; icon: typeof UserCheck }[] = [
@@ -52,7 +52,7 @@ function finishLogin(
     user,
   );
   toast.success(`Welcome back, ${user.fullName || "User"}!`);
-  router.push("/properties");
+  router.push(getDashboardPath(user.role));
 }
 
 export function LoginForm() {

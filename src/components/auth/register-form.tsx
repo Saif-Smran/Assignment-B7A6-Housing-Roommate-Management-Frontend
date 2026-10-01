@@ -26,7 +26,7 @@ import {
   useRegisterMutation,
 } from "@/hooks/useAuthMutations";
 import type { AuthResponseData, Role } from "@/interfaces";
-import { setAuthToken } from "@/lib/auth";
+import { getDashboardPath, setAuthToken } from "@/lib/auth";
 import { registerSchema } from "@/validation";
 
 function completeRegistration(
@@ -47,7 +47,7 @@ function completeRegistration(
     user,
   );
   toast.success(`Welcome to UrbanMatch, ${fullName}!`);
-  router.push("/properties");
+  router.push(getDashboardPath(user.role));
 }
 
 export function RegisterForm() {

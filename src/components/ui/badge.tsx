@@ -1,5 +1,4 @@
-import { cva, type VariantProps } from "class-variance-authority";
-import type * as React from "react";
+import { cva } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const badgeVariants = cva(
@@ -30,7 +29,6 @@ const badgeVariants = cva(
 
 import type { BadgeProps } from "@/interfaces";
 export type { BadgeProps };
-
 
 function Badge({ className, variant, ...props }: BadgeProps) {
   return (

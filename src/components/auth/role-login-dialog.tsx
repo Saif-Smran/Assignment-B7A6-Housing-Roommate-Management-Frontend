@@ -7,7 +7,7 @@ import { toast } from "react-toastify";
 import { Button } from "@/components/ui/button";
 import { useDemoLoginMutation } from "@/hooks/useAuthMutations";
 import type { AuthResponseData, Role } from "@/interfaces";
-import { setAuthToken } from "@/lib/auth";
+import { getDashboardPath, setAuthToken } from "@/lib/auth";
 
 const roles: {
   value: Role;
@@ -51,7 +51,7 @@ function completeLogin(
     user,
   );
   toast.success(`Signed in as ${user.fullName || role}.`);
-  router.push("/properties");
+  router.push(getDashboardPath(user.role));
 }
 
 export function RoleLoginDialog({ onOpen }: { onOpen?: () => void }) {

@@ -1,16 +1,13 @@
 "use client";
 
 import { ChevronDown } from "lucide-react";
-import type * as React from "react";
-import { cn } from "@/lib/utils";
-
 import type { AccordionItemProps as BaseAccordionProps } from "@/interfaces";
+import { cn } from "@/lib/utils";
 
 type AccordionItemProps = BaseAccordionProps & {
   title?: string;
   className?: string;
 };
-
 
 export function AccordionItem({
   title,

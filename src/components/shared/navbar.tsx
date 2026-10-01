@@ -2,9 +2,11 @@
 
 import {
   Building2,
+  ChevronDown,
   HelpCircle,
   Home,
   Info,
+  LayoutDashboard,
   LogIn,
   LogOut,
   Menu,
@@ -19,10 +21,16 @@ import * as React from "react";
 import { toast } from "react-toastify";
 import { Button } from "@/components/ui/button";
 import type { User } from "@/interfaces";
-import { getStoredUser, isAuthenticated, logoutUser } from "@/lib/auth";
+import {
+  getDashboardPath,
+  getStoredUser,
+  isAuthenticated,
+  logoutUser,
+} from "@/lib/auth";
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const [userMenuOpen, setUserMenuOpen] = React.useState(false);
   const [user, setUser] = React.useState<Partial<User> | null>(null);
   const pathname = usePathname();
   const router = useRouter();
@@ -45,6 +53,7 @@ export function Navbar() {
   const handleLogout = () => {
     logoutUser();
     setMobileMenuOpen(false);
+    setUserMenuOpen(false);
     toast.success("You have been logged out.");
     router.push("/");
   };
@@ -63,6 +72,7 @@ export function Navbar() {
         {/* Brand Logo */}
         <Link
           href="/"
+          aria-label="UrbanMatch home"
           className="flex items-center gap-2.5 group transition-transform active:scale-95"
         >
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-500 text-white shadow-md shadow-indigo-500/20 group-hover:shadow-indigo-500/35 transition-all">
@@ -114,15 +124,43 @@ export function Navbar() {
         <div className="hidden md:flex items-center gap-2.5">
           {user ? (
             <div className="flex items-center gap-2">
-              <div className="flex items-center gap-2 rounded-full border border-border/60 bg-muted/40 px-3 py-1.5">
-                <UserCircle className="h-4 w-4 text-indigo-600" />
-                <span className="max-w-32 truncate text-xs font-semibold">
-                  {user.fullName || user.email || "Signed in"}
-                </span>
-                {user.role && (
-                  <span className="text-[10px] uppercase text-muted-foreground">
-                    {user.role}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setUserMenuOpen((open) => !open)}
+                  aria-expanded={userMenuOpen}
+                  className="flex items-center gap-2 rounded-full border border-border/60 bg-muted/40 px-3 py-1.5 transition-colors hover:bg-muted"
+                >
+                  <UserCircle className="h-4 w-4 text-indigo-600" />
+                  <span className="max-w-32 truncate text-xs font-semibold">
+                    {user.fullName || user.email || "Signed in"}
                   </span>
+                  {user.role && (
+                    <span className="text-[10px] uppercase text-muted-foreground">
+                      {user.role}
+                    </span>
+                  )}
+                  <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+                </button>
+                {userMenuOpen && (
+                  <div className="absolute right-0 top-full z-50 mt-2 w-48 rounded-2xl border border-border bg-card p-1.5 shadow-xl">
+                    <Link
+                      href={getDashboardPath(user.role)}
+                      onClick={() => setUserMenuOpen(false)}
+                      className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium hover:bg-muted"
+                    >
+                      <LayoutDashboard className="h-4 w-4 text-indigo-600" />
+                      Dashboard
+                    </Link>
+                    <Link
+                      href="/dashboard/profile"
+                      onClick={() => setUserMenuOpen(false)}
+                      className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium hover:bg-muted"
+                    >
+                      <UserCircle className="h-4 w-4 text-indigo-600" />
+                      My profile
+                    </Link>
+                  </div>
                 )}
               </div>
               <Button
@@ -162,7 +200,6 @@ export function Navbar() {
               </Button>
             </>
           )}
-          
         </div>
 
         {/* Mobile Hamburger Toggle */}
@@ -219,6 +256,22 @@ export function Navbar() {
                       {user.fullName || user.email || "Signed in"}
                     </span>
                   </div>
+                  <Link
+                    href={getDashboardPath(user.role)}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium hover:bg-muted"
+                  >
+                    <LayoutDashboard className="h-4 w-4 text-indigo-600" />
+                    Dashboard
+                  </Link>
+                  <Link
+                    href="/dashboard/profile"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium hover:bg-muted"
+                  >
+                    <UserCircle className="h-4 w-4 text-indigo-600" />
+                    My profile
+                  </Link>
                   <Button
                     type="button"
                     variant="outline"
@@ -258,7 +311,6 @@ export function Navbar() {
                   </Button>
                 </div>
               )}
-              
             </div>
           </div>
         </div>

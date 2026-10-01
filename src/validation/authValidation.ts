@@ -7,9 +7,7 @@ export const loginSchema = z.object({
     .trim()
     .min(1, "Email is required")
     .email("Invalid email address format"),
-  password: z
-    .string()
-    .min(6, "Password must be at least 6 characters"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
 export type LoginSchemaType = z.infer<typeof loginSchema>;
@@ -28,15 +26,14 @@ export const registerSchema = z
       .email("Invalid email address format"),
     phone: z.string().trim().optional(),
     role: z.enum(["TENANT", "OWNER", "ADMIN"]),
-    password: z
-      .string()
-      .min(6, "Password must be at least 6 characters"),
-    confirmPassword: z
-      .string()
-      .min(1, "Please confirm your password"),
+    password: z.string().min(6, "Password must be at least 6 characters"),
+    confirmPassword: z.string().min(1, "Please confirm your password"),
     agreeTerms: z
       .boolean()
-      .refine((val) => val === true, "You must accept the Terms of Service & Privacy Policy"),
+      .refine(
+        (val) => val === true,
+        "You must accept the Terms of Service & Privacy Policy",
+      ),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",

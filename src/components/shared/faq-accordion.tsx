@@ -20,7 +20,6 @@ export type FaqItem = Omit<BaseFaqItem, "category"> & {
   category: "tenant" | "owner" | "payment" | "security";
 };
 
-
 const FAQ_DATA: FaqItem[] = [
   // Tenant FAQs
   {
