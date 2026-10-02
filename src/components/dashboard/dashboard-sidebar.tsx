@@ -2,7 +2,10 @@
 
 import {
   Building2,
+  CalendarClock,
   ClipboardList,
+  Hammer,
+  HandCoins,
   LayoutDashboard,
   Settings,
   ShieldCheck,
@@ -56,6 +59,21 @@ const linksByRole: Record<
       href: "/dashboard/owner/applications",
       label: "Applications",
       icon: ClipboardList,
+    },
+    {
+      href: "/dashboard/owner/viewings",
+      label: "Viewings",
+      icon: CalendarClock,
+    },
+    {
+      href: "/dashboard/owner/maintenance",
+      label: "Maintenance",
+      icon: Hammer,
+    },
+    {
+      href: "/dashboard/owner/earnings",
+      label: "Earnings",
+      icon: HandCoins,
     },
   ],
   TENANT: [
@@ -119,8 +137,21 @@ export function DashboardSidebar() {
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton
-                render={<Link href="/dashboard/profile" />}
-                isActive={pathname === "/dashboard/profile"}
+                render={
+                  <Link
+                    href={
+                      role === "OWNER"
+                        ? "/dashboard/owner/profile"
+                        : "/dashboard/profile"
+                    }
+                  />
+                }
+                isActive={
+                  pathname ===
+                  (role === "OWNER"
+                    ? "/dashboard/owner/profile"
+                    : "/dashboard/profile")
+                }
                 tooltip="My profile"
               >
                 <UserCircle />
