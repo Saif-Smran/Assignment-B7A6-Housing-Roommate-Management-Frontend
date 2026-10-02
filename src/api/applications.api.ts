@@ -2,6 +2,7 @@ import type {
   ApiResponse,
   Application,
   ApplicationFilterParams,
+  ApplicationStatus,
   PaginatedData,
 } from "@/interfaces";
 import { fetchApi } from "./client";
@@ -27,6 +28,29 @@ export async function getApplications(
   return fetchApi<PaginatedData<Application>>(
     `/applications${queryString ? `?${queryString}` : ""}`,
     {},
+    token,
+  );
+}
+
+export async function getApplicationsForProperty(
+  propertyId: string,
+  token?: string,
+): Promise<ApiResponse<PaginatedData<Application>>> {
+  return fetchApi<PaginatedData<Application>>(
+    `/applications/for-property/${propertyId}`,
+    {},
+    token,
+  );
+}
+
+export async function updateApplicationStatus(
+  applicationId: string,
+  status: ApplicationStatus,
+  token?: string,
+): Promise<ApiResponse<Application>> {
+  return fetchApi<Application>(
+    `/applications/${applicationId}/status`,
+    { method: "PATCH", body: JSON.stringify({ status }) },
     token,
   );
 }

@@ -1,8 +1,10 @@
 import type {
   ApiResponse,
   MaintenanceRequest,
+  MaintenanceStatus,
   PaginatedData,
   ViewingRequest,
+  ViewingStatus,
 } from "@/interfaces";
 import { fetchApi } from "./client";
 
@@ -42,6 +44,30 @@ export async function getMaintenanceRequests(
   return fetchApi<PaginatedData<MaintenanceRequest>>(
     "/maintenance-requests",
     {},
+    token,
+  );
+}
+
+export async function updateViewingRequestStatus(
+  viewingRequestId: string,
+  status: ViewingStatus,
+  token?: string,
+): Promise<ApiResponse<ViewingRequest>> {
+  return fetchApi<ViewingRequest>(
+    `/viewing-requests/${viewingRequestId}/status`,
+    { method: "PATCH", body: JSON.stringify({ status }) },
+    token,
+  );
+}
+
+export async function updateMaintenanceRequestStatus(
+  maintenanceRequestId: string,
+  payload: { status: MaintenanceStatus; assignedTo?: string },
+  token?: string,
+): Promise<ApiResponse<MaintenanceRequest>> {
+  return fetchApi<MaintenanceRequest>(
+    `/maintenance-requests/${maintenanceRequestId}/status`,
+    { method: "PATCH", body: JSON.stringify(payload) },
     token,
   );
 }

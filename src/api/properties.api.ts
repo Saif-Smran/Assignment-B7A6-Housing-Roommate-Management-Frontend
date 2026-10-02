@@ -9,6 +9,7 @@ import { fetchApi } from "./client";
 
 export async function getProperties(
   params?: PropertyFilterParams,
+  token?: string,
 ): Promise<ApiResponse<PaginatedData<PropertyDetails>>> {
   const query = new URLSearchParams();
   if (params?.page) query.set("page", params.page.toString());
@@ -24,9 +25,70 @@ export async function getProperties(
   const queryString = query.toString();
   const endpoint = `/properties${queryString ? `?${queryString}` : ""}`;
 
-  return fetchApi<PaginatedData<PropertyDetails>>(endpoint, {
-    next: { revalidate: 30 },
-  });
+  return fetchApi<PaginatedData<PropertyDetails>>(
+    endpoint,
+    { next: { revalidate: 30 } },
+    token,
+  );
+}
+
+export async function createProperty(
+  payload: Pick<
+    PropertyDetails,
+    | "title"
+    | "description"
+    | "address"
+    | "city"
+    | "state"
+    | "country"
+    | "zipCode"
+    | "propertyType"
+    | "amenities"
+  >,
+  token?: string,
+): Promise<ApiResponse<PropertyDetails>> {
+  return fetchApi<PropertyDetails>(
+    "/properties",
+    { method: "POST", body: JSON.stringify(payload) },
+    token,
+  );
+}
+
+export async function updateProperty(
+  propertyId: string,
+  payload: Partial<
+    Pick<
+      PropertyDetails,
+      | "title"
+      | "description"
+      | "address"
+      | "city"
+      | "state"
+      | "country"
+      | "zipCode"
+      | "propertyType"
+      | "amenities"
+      | "isActive"
+    >
+  >,
+  token?: string,
+): Promise<ApiResponse<PropertyDetails>> {
+  return fetchApi<PropertyDetails>(
+    `/properties/${propertyId}`,
+    { method: "PATCH", body: JSON.stringify(payload) },
+    token,
+  );
+}
+
+export async function deleteProperty(
+  propertyId: string,
+  token?: string,
+): Promise<ApiResponse<null>> {
+  return fetchApi<null>(
+    `/properties/${propertyId}`,
+    { method: "DELETE" },
+    token,
+  );
 }
 
 export async function searchProperties(
