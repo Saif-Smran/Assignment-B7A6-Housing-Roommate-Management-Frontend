@@ -1,9 +1,11 @@
 "use client";
 
-import { FileText, Printer } from "lucide-react";
+import { CreditCard, FileText, LoaderCircle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
-import { getMyPayments } from "@/api/payments.api";
+import { getApplicationsForProperties } from "@/api/applications.api";
+import { initiatePayment } from "@/api/payments.api";
+import { getProperties, getRoomById } from "@/api/properties.api";
 import {
   OwnerEmpty,
   OwnerPageHeader,
@@ -12,130 +14,248 @@ import {
 } from "@/components/owner/owner-ui";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { Payment } from "@/interfaces";
+import { Input } from "@/components/ui/input";
+import type { Application, PaymentType, Room } from "@/interfaces";
 import { getAuthToken } from "@/lib/auth";
 
+type BillingCandidate = { application: Application; room: Room };
+
 export default function OwnerBillingPage() {
-  const [payments, setPayments] = useState<Payment[]>([]);
+  const [candidates, setCandidates] = useState<BillingCandidate[]>([]);
   const [selectedId, setSelectedId] = useState("");
+  const [billType, setBillType] = useState<"RENT" | "UTILITY">("RENT");
+  const [amount, setAmount] = useState("");
+  const [description, setDescription] = useState(
+    "Monthly rent payment via Stripe gateway",
+  );
   const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(false);
+  const token = getAuthToken() || undefined;
 
   useEffect(() => {
-    getMyPayments(
-      {
-        limit: 100,
-        status: "COMPLETED",
-        sortBy: "createdAt",
-        sortOrder: "desc",
-      },
-      getAuthToken() || undefined,
-    )
-      .then((response) => {
-        if (!response.success) {
-          toast.error(response.message || "Unable to load completed payments.");
-          return;
-        }
-        const completedPayments = response.data?.items ?? [];
-        setPayments(completedPayments);
-        setSelectedId(completedPayments[0]?.id ?? "");
-      })
-      .finally(() => setLoading(false));
-  }, []);
+    async function loadApprovedRooms() {
+      const propertiesResponse = await getProperties({ limit: 100 }, token);
+      if (!propertiesResponse.success) {
+        toast.error(propertiesResponse.message || "Unable to load properties.");
+        setLoading(false);
+        return;
+      }
 
-  const selectedPayment = useMemo(
-    () => payments.find((payment) => payment.id === selectedId),
-    [payments, selectedId],
+      const applicationsResponse = await getApplicationsForProperties(
+        propertiesResponse.data?.items.map((property) => property.id) ?? [],
+        token,
+      );
+      if (!applicationsResponse.success) {
+        toast.error(
+          applicationsResponse.message || "Unable to load applications.",
+        );
+        setLoading(false);
+        return;
+      }
+
+      const approvedApplications = (
+        applicationsResponse.data?.items ?? []
+      ).filter((application) => application.status === "APPROVED");
+      const roomResults = await Promise.all(
+        approvedApplications.map(async (application) => ({
+          application,
+          response: await getRoomById(application.roomId, token),
+        })),
+      );
+      const loadedCandidates = roomResults.flatMap(
+        ({ application, response }) =>
+          response.success && response.data
+            ? [{ application, room: response.data }]
+            : [],
+      );
+      setCandidates(loadedCandidates);
+      setSelectedId(loadedCandidates[0]?.application.id ?? "");
+      if (roomResults.some(({ response }) => !response.success)) {
+        toast.error("Some approved rooms could not be loaded.");
+      }
+      setLoading(false);
+    }
+
+    void loadApprovedRooms();
+  }, [token]);
+
+  const selected = useMemo(
+    () => candidates.find(({ application }) => application.id === selectedId),
+    [candidates, selectedId],
   );
+
+  useEffect(() => {
+    if (!selected) return;
+    setAmount(billType === "RENT" ? String(selected.room.rentAmount) : "");
+  }, [billType, selected]);
+
+  function changeBillType(nextType: "RENT" | "UTILITY") {
+    setBillType(nextType);
+    setDescription(
+      nextType === "RENT"
+        ? "Monthly rent payment via Stripe gateway"
+        : "Monthly utility bill via Stripe gateway",
+    );
+    if (nextType === "RENT" && selected) {
+      setAmount(String(selected.room.rentAmount));
+    } else if (nextType === "UTILITY") {
+      setAmount("");
+    }
+  }
+
+  async function generateBill() {
+    if (!selected) return;
+    const billAmount = Number(amount);
+    if (!Number.isFinite(billAmount) || billAmount <= 0) {
+      toast.error("Enter a bill amount greater than zero.");
+      return;
+    }
+    setGenerating(true);
+    const origin = window.location.origin;
+    const response = await initiatePayment(
+      {
+        applicationId: selected.application.id,
+        amount: billAmount,
+        paymentType: billType as PaymentType,
+        description: description.trim(),
+        successUrl: `${origin}/payment/success`,
+        cancelUrl: `${origin}/payment/cancel`,
+      },
+      token,
+    );
+    if (!response.success || !response.data?.checkoutUrl) {
+      toast.error(response.message || "Unable to generate the bill.");
+      setGenerating(false);
+      return;
+    }
+    window.location.assign(response.data.checkoutUrl);
+  }
 
   return (
     <section className={ownerSectionClass}>
       <OwnerPageHeader
         title="Tenant bills"
-        description="Generate a printable bill from a completed tenant payment."
-        action={
-          <Button disabled={!selectedPayment} onClick={() => window.print()}>
-            <Printer /> Print bill
-          </Button>
-        }
+        description="Select an approved tenant room and generate a rent or utility checkout bill."
       />
       {loading ? (
         <div className="h-56 animate-pulse rounded-lg bg-muted" />
-      ) : payments.length === 0 ? (
-        <OwnerEmpty message="No completed tenant payments are available for billing." />
+      ) : candidates.length === 0 ? (
+        <OwnerEmpty message="No rooms with approved applications are ready for billing." />
       ) : (
-        <div className="grid gap-6 lg:grid-cols-[300px_1fr]">
-          <Card className="print:hidden">
+        <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
+          <Card>
             <CardHeader>
-              <CardTitle className="text-base">Completed payments</CardTitle>
+              <CardTitle className="text-base">Approved rooms</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {payments.map((payment) => (
+              {candidates.map(({ application, room }) => (
                 <button
                   type="button"
-                  key={payment.id}
-                  onClick={() => setSelectedId(payment.id)}
-                  className={`w-full rounded-lg border p-3 text-left text-sm transition-colors ${selectedId === payment.id ? "border-indigo-500 bg-indigo-500/10" : "hover:bg-muted"}`}
+                  key={application.id}
+                  onClick={() => setSelectedId(application.id)}
+                  className={`w-full rounded-lg border p-3 text-left text-sm transition-colors ${selectedId === application.id ? "border-indigo-500 bg-indigo-500/10" : "hover:bg-muted"}`}
                 >
                   <span className="block font-medium">
-                    {payment.paymentType} payment
+                    Room {room.roomNumber || room.id}
                   </span>
                   <span className="block text-xs text-muted-foreground">
-                    {payment.currency} {payment.amount.toLocaleString()} ·{" "}
-                    {new Date(payment.createdAt).toLocaleDateString()}
+                    Tenant: {application.tenantId}
+                  </span>
+                  <span className="block text-xs text-muted-foreground">
+                    BDT {room.rentAmount.toLocaleString()} / month
                   </span>
                 </button>
               ))}
             </CardContent>
           </Card>
-          {selectedPayment && (
-            <Card className="print:border-0 print:shadow-none">
+          {selected && (
+            <Card>
               <CardHeader className="border-b">
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <FileText className="mb-3 h-8 w-8 text-indigo-600" />
-                    <CardTitle>Tenant payment bill</CardTitle>
+                    <CardTitle>Generate tenant bill</CardTitle>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      Bill reference: {selectedPayment.id}
+                      Application: {selected.application.id}
                     </p>
                   </div>
-                  <OwnerStatus value={selectedPayment.status} />
+                  <OwnerStatus value={selected.application.status} />
                 </div>
               </CardHeader>
               <CardContent className="space-y-6 pt-6 text-sm">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
-                    <p className="text-muted-foreground">Tenant ID</p>
-                    <p className="font-medium">{selectedPayment.userId}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Application ID</p>
+                    <p className="text-muted-foreground">Tenant</p>
                     <p className="font-medium">
-                      {selectedPayment.applicationId ?? "Not linked"}
+                      {selected.application.tenantId}
                     </p>
                   </div>
                   <div>
-                    <p className="text-muted-foreground">Payment date</p>
+                    <p className="text-muted-foreground">Room</p>
                     <p className="font-medium">
-                      {new Date(selectedPayment.createdAt).toLocaleDateString()}
+                      {selected.room.roomNumber || selected.room.id}
                     </p>
                   </div>
                   <div>
                     <p className="text-muted-foreground">Payment type</p>
-                    <p className="font-medium">{selectedPayment.paymentType}</p>
+                    <select
+                      value={billType}
+                      onChange={(event) =>
+                        changeBillType(event.target.value as "RENT" | "UTILITY")
+                      }
+                      className="mt-1 h-10 w-full rounded-xl border border-input bg-background px-3 text-sm"
+                    >
+                      <option value="RENT">RENT</option>
+                      <option value="UTILITY">UTILITY</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="bill-amount"
+                      className="text-muted-foreground"
+                    >
+                      Bill amount
+                    </label>
+                    <Input
+                      id="bill-amount"
+                      type="number"
+                      min="1"
+                      value={amount}
+                      readOnly={billType === "RENT"}
+                      onChange={(event) => setAmount(event.target.value)}
+                      className="mt-1"
+                    />
                   </div>
                 </div>
                 <div className="flex items-center justify-between border-t pt-4 text-base">
-                  <span className="font-medium">Total paid</span>
+                  <span className="font-medium">Bill total</span>
                   <span className="text-xl font-bold">
-                    {selectedPayment.currency}{" "}
-                    {selectedPayment.amount.toLocaleString()}
+                    BDT {(Number(amount) || 0).toLocaleString()}
                   </span>
                 </div>
-                {selectedPayment.description && (
-                  <p className="rounded-md bg-muted p-3 text-muted-foreground">
-                    {selectedPayment.description}
-                  </p>
-                )}
+                <label htmlFor="bill-description" className="block space-y-2">
+                  <span className="font-medium">Bill description</span>
+                  <textarea
+                    id="bill-description"
+                    value={description}
+                    onChange={(event) => setDescription(event.target.value)}
+                    placeholder={`Describe this month's ${billType.toLowerCase()} bill`}
+                    className="min-h-24 w-full rounded-md border bg-background px-3 py-2 text-sm"
+                  />
+                </label>
+                <Button
+                  disabled={generating || !description.trim()}
+                  onClick={() => void generateBill()}
+                >
+                  <CreditCard />{" "}
+                  {generating ? (
+                    <>
+                      <LoaderCircle className="animate-spin" /> Generating...
+                    </>
+                  ) : (
+                    `Generate ${billType.toLowerCase()} bill`
+                  )}
+                </Button>
               </CardContent>
             </Card>
           )}

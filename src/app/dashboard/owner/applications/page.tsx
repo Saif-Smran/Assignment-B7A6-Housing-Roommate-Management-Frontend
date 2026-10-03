@@ -5,10 +5,12 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import {
   getApplicationsForProperties,
+  syncPaidOwnerApplications,
   updateApplicationStatus,
 } from "@/api/applications.api";
+import { getMyPayments } from "@/api/payments.api";
 import { getProperties } from "@/api/properties.api";
-import { assignTenantToRoom } from "@/api/rooms.api";
+import { assignTenantToRoom, updateRoom } from "@/api/rooms.api";
 import {
   OwnerEmpty,
   OwnerPageHeader,
@@ -41,7 +43,17 @@ export default function OwnerApplicationsPage() {
       if (!response.success) {
         toast.error(response.message || "Unable to load applications.");
       } else {
-        setApplications(response.data?.items ?? []);
+        const applications = response.data?.items ?? [];
+        const paymentsResponse = await getMyPayments(
+          { status: "COMPLETED", limit: 100 },
+          token,
+        );
+        await syncPaidOwnerApplications(
+          applications,
+          paymentsResponse.success ? (paymentsResponse.data?.items ?? []) : [],
+          token,
+        );
+        setApplications(applications);
       }
       setLoading(false);
     }
@@ -75,9 +87,12 @@ export default function OwnerApplicationsPage() {
       { tenantId: application.tenantId, applicationId: application.id },
       token,
     );
-    if (!response.success)
+    if (!response.success) {
       toast.error(response.message || "Unable to assign tenant.");
-    else toast.success("Tenant assigned to room.");
+      return;
+    }
+    await updateRoom(application.roomId, { isAvailable: false }, token);
+    toast.success("Tenant assigned and room marked unavailable.");
   }
 
   return (

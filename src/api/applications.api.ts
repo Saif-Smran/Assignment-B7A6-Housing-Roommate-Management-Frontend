@@ -4,8 +4,10 @@ import type {
   ApplicationFilterParams,
   ApplicationStatus,
   PaginatedData,
+  Payment,
 } from "@/interfaces";
 import { fetchApi, normalizePaginatedResponse } from "./client";
+import { assignTenantToRoom, updateRoom } from "./rooms.api";
 
 export async function getMyApplications(
   token?: string,
@@ -71,6 +73,39 @@ export async function getApplicationsForProperties(
       },
     },
   };
+}
+
+export async function syncPaidOwnerApplications(
+  applications: Application[],
+  payments: Payment[],
+  token?: string,
+): Promise<void> {
+  const completedApplicationIds = new Set(
+    payments
+      .filter((payment) => payment.status === "COMPLETED")
+      .map((payment) => payment.applicationId)
+      .filter((applicationId): applicationId is string =>
+        Boolean(applicationId),
+      ),
+  );
+  const paidApprovedApplications = applications.filter(
+    (application) =>
+      application.status === "APPROVED" &&
+      completedApplicationIds.has(application.id),
+  );
+
+  await Promise.all(
+    paidApprovedApplications.map(async (application) => {
+      const assignment = await assignTenantToRoom(
+        application.roomId,
+        { tenantId: application.tenantId, applicationId: application.id },
+        token,
+      );
+      if (assignment.success) {
+        await updateRoom(application.roomId, { isAvailable: false }, token);
+      }
+    }),
+  );
 }
 
 export async function updateApplicationStatus(

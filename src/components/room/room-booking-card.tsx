@@ -30,9 +30,13 @@ export function RoomBookingCard({
   property,
   selectedRoom: initialSelectedRoom,
 }: RoomBookingCardProps) {
+  const availableRooms =
+    property.rooms?.filter((room) => room.isAvailable) ?? [];
   const router = useRouter();
   const [selectedRoom, setSelectedRoom] = React.useState<Room | null>(
-    initialSelectedRoom || property.rooms?.[0] || null,
+    (initialSelectedRoom?.isAvailable ? initialSelectedRoom : null) ||
+      availableRooms[0] ||
+      null,
   );
   const [isApplyOpen, setIsApplyOpen] = React.useState(false);
   const [isViewingOpen, setIsViewingOpen] = React.useState(false);
@@ -56,7 +60,7 @@ export function RoomBookingCard({
   };
 
   React.useEffect(() => {
-    if (initialSelectedRoom) {
+    if (initialSelectedRoom?.isAvailable) {
       setSelectedRoom(initialSelectedRoom);
     }
   }, [initialSelectedRoom]);
@@ -65,7 +69,7 @@ export function RoomBookingCard({
   const activeRoom = selectedRoom || property.rooms?.[0];
   const rent = activeRoom?.rentAmount || 0;
   const deposit = activeRoom?.securityDeposit || rent;
-  const isAvailable = activeRoom ? activeRoom.isAvailable : property.isActive;
+  const isAvailable = activeRoom?.isAvailable ?? false;
 
   return (
     <>
@@ -96,16 +100,16 @@ export function RoomBookingCard({
 
           <CardContent className="p-5 space-y-4">
             {/* Room Selector Pills if multiple rooms exist */}
-            {property.rooms && property.rooms.length > 1 && (
+            {availableRooms.length > 1 && (
               <div className="space-y-2">
                 <div className="text-xs font-semibold text-foreground flex items-center justify-between">
                   <span>Choose Room Unit</span>
                   <span className="text-[11px] text-muted-foreground">
-                    {property.rooms.length} Units in Property
+                    {property.rooms?.length ?? 0} Units in Property
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  {property.rooms.map((room) => {
+                  {availableRooms.map((room) => {
                     const isSelected = selectedRoom?.id === room.id;
                     return (
                       <button
@@ -137,6 +141,11 @@ export function RoomBookingCard({
             )}
 
             {/* Fee Breakdown List */}
+            {!activeRoom && (
+              <div className="rounded-xl border border-amber-200 bg-amber-500/10 p-3 text-xs text-amber-700">
+                This property has no rooms available for rent right now.
+              </div>
+            )}
             <div className="space-y-2 rounded-xl border border-border/50 bg-muted/30 p-3.5 text-xs">
               <div className="flex items-center justify-between text-muted-foreground">
                 <span>Security Deposit</span>

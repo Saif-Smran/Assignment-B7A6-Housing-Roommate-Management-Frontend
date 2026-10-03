@@ -24,7 +24,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
   // Calculate lowest rent among available rooms
   const availableRooms = property.rooms?.filter((r) => r.isAvailable) || [];
   const roomCount = property.rooms?.length || 0;
-  const rents = property.rooms?.map((r) => r.rentAmount) || [];
+  const rents = availableRooms.map((room) => room.rentAmount);
   const minRent = rents.length > 0 ? Math.min(...rents) : null;
 
   return (

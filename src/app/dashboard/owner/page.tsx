@@ -13,7 +13,10 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { getApplicationsForProperties } from "@/api/applications.api";
+import {
+  getApplicationsForProperties,
+  syncPaidOwnerApplications,
+} from "@/api/applications.api";
 import { getMyPayments } from "@/api/payments.api";
 import { getProperties } from "@/api/properties.api";
 import { getMaintenanceRequests, getViewingRequests } from "@/api/viewings.api";
@@ -101,6 +104,12 @@ export default function OwnerDashboardPage() {
         setLoading(false);
         return;
       }
+
+      await syncPaidOwnerApplications(
+        applications.data?.items ?? [],
+        payments.data?.items ?? [],
+        token,
+      );
 
       setData({
         properties: properties.data?.items ?? [],

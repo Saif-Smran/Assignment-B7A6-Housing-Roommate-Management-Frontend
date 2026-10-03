@@ -5,7 +5,7 @@ import type {
   PaymentFilterParams,
   PaymentType,
 } from "@/interfaces";
-import { fetchApi } from "./client";
+import { fetchApi, normalizePaginatedResponse } from "./client";
 
 export async function getMyPayments(
   params?: PaymentFilterParams,
@@ -20,10 +20,12 @@ export async function getMyPayments(
   if (params?.sortOrder) query.set("sortOrder", params.sortOrder);
 
   const queryString = query.toString();
-  return fetchApi<PaginatedData<Payment>>(
-    `/payments/my${queryString ? `?${queryString}` : ""}`,
-    {},
-    token,
+  return normalizePaginatedResponse(
+    await fetchApi<PaginatedData<Payment> | Payment[]>(
+      `/payments/my${queryString ? `?${queryString}` : ""}`,
+      {},
+      token,
+    ),
   );
 }
 

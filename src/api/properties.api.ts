@@ -116,8 +116,15 @@ export async function getRoomsByPropertyId(
   });
 }
 
-export async function getRoomById(roomId: string): Promise<ApiResponse<Room>> {
-  return fetchApi<Room>(`/rooms/${roomId}`, {
-    next: { revalidate: 30 },
-  });
+export async function getRoomById(
+  roomId: string,
+  token?: string,
+): Promise<ApiResponse<Room>> {
+  return fetchApi<Room>(
+    `/rooms/${roomId}`,
+    {
+      next: { revalidate: 30 },
+    },
+    token,
+  );
 }
