@@ -5,7 +5,7 @@ import type {
   ApplicationStatus,
   PaginatedData,
 } from "@/interfaces";
-import { fetchApi } from "./client";
+import { fetchApi, normalizePaginatedResponse } from "./client";
 
 export async function getMyApplications(
   token?: string,
@@ -36,11 +36,41 @@ export async function getApplicationsForProperty(
   propertyId: string,
   token?: string,
 ): Promise<ApiResponse<PaginatedData<Application>>> {
-  return fetchApi<PaginatedData<Application>>(
-    `/applications/for-property/${propertyId}`,
-    {},
-    token,
+  return normalizePaginatedResponse(
+    await fetchApi<PaginatedData<Application> | Application[]>(
+      `/applications/for-property/${propertyId}`,
+      {},
+      token,
+    ),
   );
+}
+
+export async function getApplicationsForProperties(
+  propertyIds: string[],
+  token?: string,
+): Promise<ApiResponse<PaginatedData<Application>>> {
+  const responses = await Promise.all(
+    propertyIds.map((propertyId) =>
+      getApplicationsForProperty(propertyId, token),
+    ),
+  );
+  const failedResponse = responses.find((response) => !response.success);
+  if (failedResponse) return failedResponse;
+
+  const items = responses.flatMap((response) => response.data?.items ?? []);
+  return {
+    success: true,
+    message: "Applications loaded.",
+    data: {
+      items,
+      pagination: {
+        page: 1,
+        limit: items.length,
+        total: items.length,
+        pages: 1,
+      },
+    },
+  };
 }
 
 export async function updateApplicationStatus(

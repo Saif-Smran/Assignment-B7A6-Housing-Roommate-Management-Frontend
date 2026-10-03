@@ -6,7 +6,7 @@ import type {
   ViewingRequest,
   ViewingStatus,
 } from "@/interfaces";
-import { fetchApi } from "./client";
+import { fetchApi, normalizePaginatedResponse } from "./client";
 
 export async function createViewingRequest(
   payload: {
@@ -31,20 +31,24 @@ export async function createViewingRequest(
 export async function getViewingRequests(
   token?: string,
 ): Promise<ApiResponse<PaginatedData<ViewingRequest>>> {
-  return fetchApi<PaginatedData<ViewingRequest>>(
-    "/viewing-requests",
-    {},
-    token,
+  return normalizePaginatedResponse(
+    await fetchApi<PaginatedData<ViewingRequest> | ViewingRequest[]>(
+      "/viewing-requests",
+      {},
+      token,
+    ),
   );
 }
 
 export async function getMaintenanceRequests(
   token?: string,
 ): Promise<ApiResponse<PaginatedData<MaintenanceRequest>>> {
-  return fetchApi<PaginatedData<MaintenanceRequest>>(
-    "/maintenance-requests",
-    {},
-    token,
+  return normalizePaginatedResponse(
+    await fetchApi<PaginatedData<MaintenanceRequest> | MaintenanceRequest[]>(
+      "/maintenance-requests",
+      {},
+      token,
+    ),
   );
 }
 

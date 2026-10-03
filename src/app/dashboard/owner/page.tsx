@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { getApplications } from "@/api/applications.api";
+import { getApplicationsForProperties } from "@/api/applications.api";
 import { getMyPayments } from "@/api/payments.api";
 import { getProperties } from "@/api/properties.api";
 import { getMaintenanceRequests, getViewingRequests } from "@/api/viewings.api";
@@ -72,43 +72,50 @@ export default function OwnerDashboardPage() {
   useEffect(() => {
     const token = getAuthToken() || undefined;
 
-    Promise.all([
-      getProperties({ limit: 50 }, token),
-      getApplications(
-        { limit: 50, sortBy: "createdAt", sortOrder: "desc" },
+    async function loadOwnerData() {
+      const properties = await getProperties({ limit: 50 }, token);
+      if (!properties.success) {
+        setError(properties.message || "Unable to load owner activity.");
+        setLoading(false);
+        return;
+      }
+      const applicationsPromise = getApplicationsForProperties(
+        properties.data?.items.map((property) => property.id) ?? [],
         token,
-      ),
-      getViewingRequests(token),
-      getMaintenanceRequests(token),
-      getMyPayments(
-        { limit: 50, sortBy: "createdAt", sortOrder: "desc" },
-        token,
-      ),
-    ])
-      .then(([properties, applications, viewings, maintenance, payments]) => {
-        const responses = [
-          properties,
-          applications,
-          viewings,
-          maintenance,
-          payments,
-        ];
-        const failedResponse = responses.find((response) => !response.success);
-        if (failedResponse) {
-          setError(failedResponse.message || "Unable to load owner activity.");
-          return;
-        }
+      );
+      const [applications, viewings, maintenance, payments] = await Promise.all(
+        [
+          applicationsPromise,
+          getViewingRequests(token),
+          getMaintenanceRequests(token),
+          getMyPayments(
+            { limit: 50, sortBy: "createdAt", sortOrder: "desc" },
+            token,
+          ),
+        ],
+      );
+      const responses = [applications, viewings, maintenance, payments];
+      const failedResponse = responses.find((response) => !response.success);
+      if (failedResponse) {
+        setError(failedResponse.message || "Unable to load owner activity.");
+        setLoading(false);
+        return;
+      }
 
-        setData({
-          properties: properties.data?.items ?? [],
-          applications: applications.data?.items ?? [],
-          viewings: viewings.data?.items ?? [],
-          maintenance: maintenance.data?.items ?? [],
-          payments: payments.data?.items ?? [],
-        });
-      })
-      .catch(() => setError("Unable to load owner activity."))
-      .finally(() => setLoading(false));
+      setData({
+        properties: properties.data?.items ?? [],
+        applications: applications.data?.items ?? [],
+        viewings: viewings.data?.items ?? [],
+        maintenance: maintenance.data?.items ?? [],
+        payments: payments.data?.items ?? [],
+      });
+      setLoading(false);
+    }
+
+    void loadOwnerData().catch(() => {
+      setError("Unable to load owner activity.");
+      setLoading(false);
+    });
   }, []);
 
   const roomCount = data.properties.reduce(

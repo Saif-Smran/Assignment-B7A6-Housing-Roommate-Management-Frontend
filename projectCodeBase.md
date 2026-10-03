@@ -10,11 +10,11 @@
 
 ## Report Preview
 
-# Graph Report - b7a7  (2026-10-02)
+# Graph Report - b7a7  (2026-10-03)
 ## Corpus Check
 - cluster-only mode — file stats not available
 ## Summary
-- 592 nodes · 1596 edges · 46 communities (17 shown, 29 thin omitted)
+- 597 nodes · 1640 edges · 47 communities (18 shown, 29 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS
 - Token cost: 0 input · 0 output
 ## Graph Freshness

@@ -7,6 +7,7 @@ import {
   Hammer,
   HandCoins,
   LayoutDashboard,
+  ReceiptText,
   Settings,
   ShieldCheck,
   UserCircle,
@@ -74,6 +75,11 @@ const linksByRole: Record<
       href: "/dashboard/owner/earnings",
       label: "Earnings",
       icon: HandCoins,
+    },
+    {
+      href: "/dashboard/owner/billing",
+      label: "Tenant bills",
+      icon: ReceiptText,
     },
   ],
   TENANT: [

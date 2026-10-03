@@ -4,7 +4,7 @@ import { Check, UserCheck, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import {
-  getApplicationsForProperty,
+  getApplicationsForProperties,
   updateApplicationStatus,
 } from "@/api/applications.api";
 import { getProperties } from "@/api/properties.api";
@@ -34,18 +34,15 @@ export default function OwnerApplicationsPage() {
         return;
       }
       const ownedProperties = propertyResponse.data?.items ?? [];
-      const results = await Promise.all(
-        ownedProperties.map((property) =>
-          getApplicationsForProperty(property.id, token),
-        ),
+      const response = await getApplicationsForProperties(
+        ownedProperties.map((property) => property.id),
+        token,
       );
-      const failed = results.find((result) => !result.success);
-      if (failed) toast.error(failed.message || "Unable to load applications.");
-      setApplications(
-        results.flatMap((result) =>
-          result.success ? (result.data?.items ?? []) : [],
-        ),
-      );
+      if (!response.success) {
+        toast.error(response.message || "Unable to load applications.");
+      } else {
+        setApplications(response.data?.items ?? []);
+      }
       setLoading(false);
     }
     void loadApplications();

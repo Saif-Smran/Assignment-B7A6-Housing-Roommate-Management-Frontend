@@ -1,4 +1,4 @@
-import type { ApiResponse } from "@/interfaces";
+import type { ApiResponse, PaginatedData } from "@/interfaces";
 
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || "https://b7-a6.vercel.app/api";
@@ -16,6 +16,26 @@ type ApiRequestInit = RequestInit & {
     tags?: string[];
   };
 };
+
+export function normalizePaginatedResponse<T>(
+  response: ApiResponse<PaginatedData<T> | T[]>,
+): ApiResponse<PaginatedData<T>> {
+  if (Array.isArray(response.data)) {
+    return {
+      ...response,
+      data: {
+        items: response.data,
+        pagination: {
+          page: 1,
+          limit: response.data.length,
+          total: response.data.length,
+          pages: 1,
+        },
+      },
+    };
+  }
+  return response as ApiResponse<PaginatedData<T>>;
+}
 
 // Helper for making API requests
 export async function fetchApi<T>(
