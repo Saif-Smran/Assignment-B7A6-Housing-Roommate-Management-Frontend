@@ -14,7 +14,7 @@
 ## Corpus Check
 - cluster-only mode — file stats not available
 ## Summary
-- 602 nodes · 1682 edges · 47 communities (18 shown, 29 thin omitted)
+- 599 nodes · 1632 edges · 46 communities (17 shown, 29 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS
 - Token cost: 0 input · 0 output
 ## Graph Freshness

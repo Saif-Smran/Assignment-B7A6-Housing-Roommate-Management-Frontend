@@ -3,7 +3,7 @@
 import { Banknote } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
-import { getMyPayments } from "@/api/payments.api";
+import { getOwnerEarnings } from "@/api/payments.api";
 import {
   OwnerEmpty,
   OwnerPageHeader,
@@ -18,12 +18,9 @@ export default function OwnerEarningsPage() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
-    getMyPayments(
-      { limit: 100, sortBy: "createdAt", sortOrder: "desc" },
-      getAuthToken() || undefined,
-    )
+    getOwnerEarnings(getAuthToken() || undefined)
       .then((response) => {
-        if (response.success) setPayments(response.data?.items ?? []);
+        if (response.success) setPayments(response.data?.payments ?? []);
         else toast.error(response.message || "Unable to load earnings.");
       })
       .finally(() => setLoading(false));
@@ -94,7 +91,7 @@ export default function OwnerEarningsPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="overflow-x-auto">
-                <table className="w-full min-w-[700px] text-left text-sm">
+                <table className="w-full min-w-175 text-left text-sm">
                   <thead className="border-b text-xs uppercase text-muted-foreground">
                     <tr>
                       <th className="p-3">Date</th>

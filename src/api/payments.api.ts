@@ -7,6 +7,62 @@ import type {
 } from "@/interfaces";
 import { fetchApi, normalizePaginatedResponse } from "./client";
 
+export interface OwnerEarningsData {
+  payments: Payment[];
+  totalEarnings: number;
+  byType: Record<string, number>;
+}
+
+type OwnerEarningsResponse =
+  | Payment[]
+  | {
+      payments?: Payment[];
+      items?: Payment[];
+      total?: number;
+      totalRevenue?: number;
+      totalEarnings?: number;
+      byType?: Record<string, number>;
+    };
+
+export async function getOwnerEarnings(
+  token?: string,
+): Promise<ApiResponse<OwnerEarningsData>> {
+  const response = await fetchApi<OwnerEarningsResponse>(
+    "/payments/earnings",
+    {},
+    token,
+  );
+  const raw = response.data;
+  const payments = Array.isArray(raw)
+    ? raw
+    : (raw?.payments ?? raw?.items ?? []);
+  const completedPayments = payments.filter(
+    (payment) => payment.status === "COMPLETED",
+  );
+  const byType = completedPayments.reduce<Record<string, number>>(
+    (summary, payment) => {
+      summary[payment.paymentType] =
+        (summary[payment.paymentType] ?? 0) + payment.amount;
+      return summary;
+    },
+    {},
+  );
+  const reportedTotal = Array.isArray(raw)
+    ? undefined
+    : (raw?.totalEarnings ?? raw?.totalRevenue ?? raw?.total);
+
+  return {
+    ...response,
+    data: {
+      payments,
+      totalEarnings:
+        reportedTotal ??
+        completedPayments.reduce((total, payment) => total + payment.amount, 0),
+      byType,
+    },
+  };
+}
+
 export async function getMyPayments(
   params?: PaymentFilterParams,
   token?: string,
