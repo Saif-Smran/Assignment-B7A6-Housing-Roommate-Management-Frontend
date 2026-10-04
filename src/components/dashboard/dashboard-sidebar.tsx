@@ -142,7 +142,9 @@ export function DashboardSidebar() {
                     href={
                       role === "OWNER"
                         ? "/dashboard/owner/profile"
-                        : "/dashboard/profile"
+                        : role === "TENANT"
+                          ? "/dashboard/tenant/profile"
+                          : "/dashboard/profile"
                     }
                   />
                 }
@@ -150,7 +152,9 @@ export function DashboardSidebar() {
                   pathname ===
                   (role === "OWNER"
                     ? "/dashboard/owner/profile"
-                    : "/dashboard/profile")
+                    : role === "TENANT"
+                      ? "/dashboard/tenant/profile"
+                      : "/dashboard/profile")
                 }
                 tooltip="My profile"
               >

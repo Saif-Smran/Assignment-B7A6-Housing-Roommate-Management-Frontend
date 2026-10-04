@@ -52,6 +52,22 @@ export async function getMaintenanceRequests(
   );
 }
 
+export async function createMaintenanceRequest(
+  roomId: string,
+  payload: {
+    title: string;
+    description: string;
+    priority: "LOW" | "MEDIUM" | "HIGH";
+  },
+  token?: string,
+): Promise<ApiResponse<MaintenanceRequest>> {
+  return fetchApi<MaintenanceRequest>(
+    `/rooms/${roomId}/maintenance`,
+    { method: "POST", body: JSON.stringify(payload) },
+    token,
+  );
+}
+
 export async function updateViewingRequestStatus(
   viewingRequestId: string,
   status: ViewingStatus,
