@@ -12,7 +12,13 @@ import { assignTenantToRoom, updateRoom } from "./rooms.api";
 export async function getMyApplications(
   token?: string,
 ): Promise<ApiResponse<PaginatedData<Application>>> {
-  return fetchApi<PaginatedData<Application>>("/applications/my", {}, token);
+  return normalizePaginatedResponse(
+    await fetchApi<PaginatedData<Application> | Application[]>(
+      "/applications/my",
+      {},
+      token,
+    ),
+  );
 }
 
 export async function getApplications(
@@ -27,10 +33,12 @@ export async function getApplications(
   if (params?.sortOrder) query.set("sortOrder", params.sortOrder);
 
   const queryString = query.toString();
-  return fetchApi<PaginatedData<Application>>(
-    `/applications${queryString ? `?${queryString}` : ""}`,
-    {},
-    token,
+  return normalizePaginatedResponse(
+    await fetchApi<PaginatedData<Application> | Application[]>(
+      `/applications${queryString ? `?${queryString}` : ""}`,
+      {},
+      token,
+    ),
   );
 }
 
