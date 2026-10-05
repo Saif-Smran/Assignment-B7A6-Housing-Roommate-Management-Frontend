@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title id="title">UrbanMatch</title>
+  <desc id="desc">A house with a verified shield for UrbanMatch</desc>
+  <rect width="64" height="64" rx="16" fill="#4f46e5"/>
+  <path d="M13 31.5 32 15l19 16.5v20H13z" fill="#fff"/>
+  <path d="M24 51.5V37h16v14.5" fill="#c7d2fe"/>
+  <path d="m42 25 9 3.8v7.6c0 6.3-3.8 11-9 13.6-5.2-2.6-9-7.3-9-13.6v-7.6z" fill="#10b981" stroke="#fff" stroke-width="2"/>
+  <path d="m37.5 36.5 3 3 5.5-6" fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"/>
+</svg>

@@ -1,24 +1,16 @@
-"use client";
+import type { Metadata } from "next";
+import { OwnerRouteGuard } from "@/components/dashboard/owner-route-guard";
 
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import type { User } from "@/interfaces";
-import { getDashboardPath, getStoredUser } from "@/lib/auth";
+export const metadata: Metadata = {
+  title: "Owner Dashboard",
+  description:
+    "Manage UrbanMatch properties, rooms, applications, maintenance, viewings, and earnings.",
+};
 
 export default function OwnerLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const router = useRouter();
-  const [allowed, setAllowed] = useState(false);
-
-  useEffect(() => {
-    const user = getStoredUser<Partial<User>>();
-    if (user?.role === "OWNER") setAllowed(true);
-    else router.replace(getDashboardPath(user?.role));
-  }, [router]);
-
-  if (!allowed) return null;
-  return children;
+  return <OwnerRouteGuard>{children}</OwnerRouteGuard>;
 }
