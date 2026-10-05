@@ -4,6 +4,7 @@ import {
   Building2,
   CalendarClock,
   ClipboardList,
+  CreditCard,
   Hammer,
   HandCoins,
   LayoutDashboard,
@@ -82,6 +83,21 @@ const linksByRole: Record<
       href: "/dashboard/tenant/applications",
       label: "Applications",
       icon: ClipboardList,
+    },
+    {
+      href: "/dashboard/tenant/viewings",
+      label: "Viewings",
+      icon: CalendarClock,
+    },
+    {
+      href: "/dashboard/tenant/maintenance",
+      label: "Maintenance",
+      icon: Hammer,
+    },
+    {
+      href: "/dashboard/tenant/payments",
+      label: "Payments",
+      icon: CreditCard,
     },
   ],
 };
