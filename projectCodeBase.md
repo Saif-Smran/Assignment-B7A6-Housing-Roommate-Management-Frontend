@@ -10,7 +10,7 @@
 
 ## Report Preview
 
-# Graph Report - b7a7  (2026-10-05)
+# Graph Report - b7a7  (2026-10-06)
 ## Corpus Check
 - cluster-only mode — file stats not available
 ## Summary

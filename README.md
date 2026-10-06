@@ -1,36 +1,198 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# UrbanMatch
+
+UrbanMatch is a Next.js housing and roommate management platform for tenants, property owners, and administrators. It connects verified property listings with room applications, viewing requests, maintenance tracking, and Stripe Checkout payments.
+
+## Features
+
+- Public property and room browsing with filters, pagination, galleries, maps, and availability indicators.
+- Tenant dashboard for applications, viewing requests, maintenance tickets, payments, and profile management.
+- Owner dashboard for properties, rooms, applications, tenant assignment, viewings, maintenance, earnings, and profile management.
+- Admin dashboard for platform statistics, users, and property moderation.
+- JWT-based authentication with tenant, owner, and admin role routing.
+- Stripe Checkout integration for rent, deposits, and utility payments.
+- Responsive UI built with Tailwind CSS, shadcn-style components, Lucide icons, and React Toastify notifications.
+- Dynamic route metadata and a branded UrbanMatch favicon.
+
+## Tech Stack
+
+- Next.js 16 App Router
+- React 19 and TypeScript
+- Tailwind CSS 4
+- TanStack Query
+- Zod
+- Stripe Checkout through the backend API
+- Leaflet and React Leaflet
+- Bun
+
+## Project Structure
+
+```text
+.
+├── public/                         # Static assets
+├── scripts/                        # Project graph/codebase generation
+├── src/
+│   ├── api/                        # Typed backend API clients
+│   ├── app/                        # Next.js App Router pages and layouts
+│   │   ├── (auth)/                 # Login and registration
+│   │   ├── (public)/               # Home, properties, about, and FAQ
+│   │   ├── dashboard/              # Role-aware dashboard shell
+│   │   │   ├── admin/              # Admin pages
+│   │   │   ├── owner/              # Owner pages and property management
+│   │   │   └── tenant/             # Tenant pages and workflows
+│   │   ├── api/                    # Next.js route handlers
+│   │   ├── icon.svg                # UrbanMatch favicon
+│   │   ├── layout.tsx              # Root metadata, fonts, and providers
+│   │   └── globals.css             # Global styles and design tokens
+│   ├── components/                 # Shared, dashboard, room, owner, and tenant UI
+│   ├── hooks/                      # Reusable React hooks
+│   ├── interfaces/                 # Shared TypeScript domain types
+│   ├── lib/                        # Authentication and utility helpers
+│   ├── providers/                  # Query, auth, and application providers
+│   ├── routes/                     # Private and role route guards
+│   └── validation/                 # Zod validation schemas
+├── graphify-out/                   # Generated code graph and architecture reports
+├── requirements.md                 # Frontend requirements and route contract
+├── next.config.ts                 # Next.js configuration
+├── package.json                    # Scripts and dependencies
+└── tsconfig.json                   # TypeScript configuration
+```
+
+## Requirements
+
+- Bun 1.4 or newer
+- A running or deployed B7A6 backend API
+- Backend authentication and demo accounts configured for the selected environment
 
 ## Getting Started
 
-First, run the development server:
+Install dependencies:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+bun install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Create a `.env` file in the project root. Do not commit secrets.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```env
+NEXT_PUBLIC_API_BASE_URL=https://your-backend.example.com/api
+NEXT_PUBLIC_APP_URL=http://localhost:3000
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+TESTER_ADMIN_EMAIL=
+TESTER_ADMIN_PASSWORD=
+TESTER_OWNER_EMAIL=
+TESTER_OWNER_PASSWORD=
+TESTER_TENANT_EMAIL=
+TESTER_TENANT_PASSWORD=
 
-## Learn More
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=
+```
 
-To learn more about Next.js, take a look at the following resources:
+Start the development server:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+bun run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Open [http://localhost:3000](http://localhost:3000). If port 3000 is already in use, stop the existing Next process before starting another development server.
 
-## Deploy on Vercel
+## Commands
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+bun run dev       # Start Next.js development mode
+bun run build     # Create a production build
+bun run start     # Start the production build
+bun run lint      # Run Biome checks
+bun run format    # Format source files with Biome
+bun run code      # Refresh the project graph and codebase snapshot
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Routes
+
+### Public
+
+- `/` - Home page with featured listings and search entry points.
+- `/properties` - Filterable property and room listing.
+- `/properties/details?id=<propertyId>` - Property details, rooms, availability, viewing, and application actions.
+- `/about` - Platform mission and team.
+- `/faq` - Tenant and owner FAQs.
+- `/login` - Credential login and demo login actions.
+- `/register` - Tenant and owner registration.
+
+### Tenant Dashboard
+
+- `/dashboard/tenant` - Applications, upcoming viewings, payment totals, and recent activity.
+- `/dashboard/tenant/applications` - Application list, status filters, and cancellation.
+- `/dashboard/tenant/viewings` - Viewing request list and cancellation.
+- `/dashboard/tenant/maintenance` - Submit and track maintenance requests for approved rooms.
+- `/dashboard/tenant/payments` - Payment history and rent/deposit Stripe Checkout actions.
+- `/dashboard/tenant/profile` - Tenant profile update form.
+
+### Owner Dashboard
+
+- `/dashboard/owner` - Property, room, application, activity, and earnings overview.
+- `/dashboard/owner/properties` - Owner property list, search, and soft deletion.
+- `/dashboard/owner/properties/new` - Four-step property and room creation flow.
+- `/dashboard/owner/properties/<id>` - Property editing and room availability management.
+- `/dashboard/owner/applications` - Approve/reject applications and assign tenants to rooms.
+- `/dashboard/owner/viewings` - Confirm or cancel viewing requests.
+- `/dashboard/owner/maintenance` - Update maintenance status and assign technicians.
+- `/dashboard/owner/earnings` - Owner earnings loaded from `/api/payments/earnings`.
+- `/dashboard/owner/profile` - Owner profile update form.
+
+### Admin Dashboard
+
+- `/dashboard/admin` - Platform statistics.
+- `/dashboard/admin/users` - User list and role management.
+- `/dashboard/admin/properties` - Property moderation.
+
+## Backend API Integration
+
+The frontend client follows the B7A6 backend/Postman API contracts. Requests are made through `src/api/client.ts`, which attaches the stored bearer token and normalizes list responses where required.
+
+Important endpoint groups include:
+
+- Authentication: `/auth/*`
+- Profile: `/users/me`
+- Properties and rooms: `/properties/*`, `/rooms/*`
+- Applications: `/applications/*`
+- Viewings: `/viewing-requests/*`
+- Maintenance: `/rooms/:roomId/maintenance`, `/maintenance-requests/*`
+- Payments: `/payments/initiate`, `/payments/my`, `/payments/earnings`
+- Admin: `/admin/*`
+
+The backend is the source of truth for authorization, payment status, room assignment, and room availability. Stripe completion is confirmed by the backend webhook rather than by trusting the browser redirect alone.
+
+## Deployment
+
+The application is deployed to Vercel. Configure the production environment variables in the Vercel project before deploying:
+
+```bash
+vercel deploy
+vercel deploy --prod
+```
+
+Required production configuration includes:
+
+- `NEXT_PUBLIC_API_BASE_URL` pointing to the deployed backend `/api` base URL.
+- `NEXT_PUBLIC_APP_URL` set to the deployed frontend origin.
+- Demo account credentials used by the login shortcuts.
+- Google and Cloudinary variables when those integrations are enabled.
+
+The backend must allow the deployed frontend origin through its `FRONTEND_URL` and CORS configuration. Stripe success and cancel URLs are derived from the current frontend origin.
+
+## Metadata and Icon
+
+The root layout defines the UrbanMatch title template, description, Open Graph defaults, and `/icon.svg` favicon. Public pages provide page-specific metadata, property details use dynamic metadata from the property API, and dashboard route groups provide tenant, owner, and admin metadata.
+
+## Validation
+
+Before opening a pull request or deploying:
+
+```bash
+bun run lint
+bun run build
+bun run code
+```
+
+The project is configured for Vercel deployment. Set the production API URL, application URL, demo credentials, and any enabled OAuth or media variables in the Vercel project settings.

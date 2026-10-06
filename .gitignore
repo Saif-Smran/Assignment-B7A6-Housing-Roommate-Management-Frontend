@@ -42,5 +42,5 @@ next-env.d.ts
 
 # Graphify generated graph artifacts
 /graphify-out/
-projectCodeBase.md
+projectCodeBase 
 .vercel
