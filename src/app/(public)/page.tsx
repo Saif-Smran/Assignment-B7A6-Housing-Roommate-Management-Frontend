@@ -439,7 +439,7 @@ export default async function HomePage() {
                   variant="outline"
                   className="rounded-2xl border-white/30 bg-white/10 text-white hover:bg-white/20 font-semibold text-sm backdrop-blur-md"
                 >
-                  <Link href="/login">Sign In with Demo Accounts</Link>
+                  <Link href="/login">Sign In </Link>
                 </Button>
               </div>
             </div>
