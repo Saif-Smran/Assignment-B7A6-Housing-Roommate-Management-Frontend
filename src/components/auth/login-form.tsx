@@ -1,5 +1,6 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { GoogleLogin } from "@react-oauth/google";
 import {
   ArrowRight,
@@ -15,6 +16,7 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import { AuthLottie } from "@/components/auth/auth-lottie";
 import { Button } from "@/components/ui/button";
@@ -25,121 +27,157 @@ import {
   useGoogleAuthMutation,
   useLoginMutation,
 } from "@/hooks/useAuthMutations";
-import type { AuthResponseData, Role } from "@/interfaces";
-import { getDashboardPath, setAuthToken } from "@/lib/auth";
+import type { AuthResponseData, LoginPayload, Role } from "@/interfaces";
+import { getDashboardPath } from "@/lib/auth";
+import { useAuth } from "@/providers/auth.provider";
 import { forgotPasswordSchema, loginSchema } from "@/validation";
 
-const demoAccounts: { role: Role; label: string; icon: typeof UserCheck }[] = [
-  { role: "TENANT", label: "Tenant", icon: UserCheck },
-  { role: "OWNER", label: "Owner", icon: Building2 },
-  { role: "ADMIN", label: "Admin", icon: ShieldCheck },
+const demoAccounts: {
+  role: Role;
+  label: string;
+  sublabel: string;
+  icon: typeof UserCheck;
+}[] = [
+  {
+    role: "ADMIN",
+    label: "Admin",
+    sublabel: "Platform Moderator",
+    icon: ShieldCheck,
+  },
+  {
+    role: "TENANT",
+    label: "User / Tenant",
+    sublabel: "Find & Rent Rooms",
+    icon: UserCheck,
+  },
+  {
+    role: "OWNER",
+    label: "Provider / Owner",
+    sublabel: "Manage Properties",
+    icon: Building2,
+  },
 ];
-
-function finishLogin(
-  response: AuthResponseData,
-  fallbackEmail: string,
-  fallbackRole: Role,
-  router: ReturnType<typeof useRouter>,
-) {
-  const user = response.user || {
-    id: `user-${Date.now()}`,
-    email: fallbackEmail,
-    fullName: fallbackEmail.split("@")[0],
-    role: fallbackRole,
-  };
-  setAuthToken(
-    response.token || response.accessToken || `session-${Date.now()}`,
-    user,
-  );
-  toast.success(`Welcome back, ${user.fullName || "User"}!`);
-  router.push(getDashboardPath(user.role));
-}
 
 export function LoginForm() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
-  const [forgotEmail, setForgotEmail] = useState("");
   const [showForgot, setShowForgot] = useState(false);
-  const [error, setError] = useState("");
+  const [activeDemoRole, setActiveDemoRole] = useState<Role | null>(null);
+  const [serverError, setServerError] = useState("");
+
   const loginMutation = useLoginMutation();
   const googleMutation = useGoogleAuthMutation();
   const forgotMutation = useForgotPasswordMutation();
   const demoMutation = useDemoLoginMutation();
 
-  const signIn = (credentials: {
-    email: string;
-    password: string;
-    role?: Role;
-  }) => {
-    setError("");
-    const result = loginSchema.safeParse(credentials);
-    if (!result.success) {
-      const message =
-        result.error.issues[0]?.message || "Enter a valid email and password.";
-      setError(message);
-      toast.error(message);
-      return;
-    }
-    loginMutation.mutate(credentials, {
-      onSuccess: (response) =>
-        response.success && response.data
-          ? finishLogin(
-              response.data,
-              credentials.email,
-              credentials.role || "TENANT",
-              router,
-            )
-          : setError(response.message || "Unable to sign in."),
-      onError: (mutationError) =>
-        setError(
-          mutationError.message || "Unable to sign in. Please try again.",
-        ),
-    });
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginPayload>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
+  const {
+    register: registerForgot,
+    handleSubmit: handleForgotSubmit,
+    reset: resetForgot,
+    formState: { errors: forgotErrors },
+  } = useForm<{ email: string }>({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: {
+      email: "",
+    },
+  });
+
+  const finishLogin = (
+    response: AuthResponseData,
+    fallbackEmail: string,
+    fallbackRole: Role,
+  ) => {
+    const user = response.user || {
+      id: `user-${Date.now()}`,
+      email: fallbackEmail,
+      fullName: fallbackEmail.split("@")[0],
+      role: fallbackRole,
+      passwordHash: null,
+      googleId: null,
+      phone: null,
+      profileImage: null,
+      provider: "CREDENTIAL" as const,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      deletedAt: null,
+    };
+
+    const token =
+      response.token || response.accessToken || `session-${Date.now()}`;
+
+    login(token, user);
+    toast.success(`Welcome back, ${user.fullName || "User"}!`);
+    router.push(getDashboardPath(user.role));
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    signIn({ email, password });
+  const onSubmit = (data: LoginPayload) => {
+    setServerError("");
+    loginMutation.mutate(data, {
+      onSuccess: (response) => {
+        if (response.success && response.data) {
+          finishLogin(response.data, data.email, "TENANT");
+        } else {
+          setServerError(response.message || "Unable to sign in.");
+          toast.error(response.message || "Unable to sign in.");
+        }
+      },
+      onError: (err) => {
+        const msg = err.message || "Unable to sign in. Please try again.";
+        setServerError(msg);
+        toast.error(msg);
+      },
+    });
   };
 
   const handleDemoLogin = (role: Role) => {
-    setError("");
+    setServerError("");
+    setActiveDemoRole(role);
     demoMutation.mutate(role, {
-      onSuccess: (response) =>
-        response.success && response.data
-          ? finishLogin(
-              response.data,
-              `${role.toLowerCase()}-demo`,
-              role,
-              router,
-            )
-          : setError(
-              response.message || "Unable to sign in with this demo account.",
-            ),
-      onError: (mutationError) =>
-        setError(
-          mutationError.message || "Unable to sign in with this demo account.",
-        ),
+      onSuccess: (response) => {
+        setActiveDemoRole(null);
+        if (response.success && response.data) {
+          finishLogin(response.data, `${role.toLowerCase()}@example.com`, role);
+        } else {
+          setServerError(
+            response.message || "Unable to sign in with demo account.",
+          );
+          toast.error(
+            response.message || "Unable to sign in with demo account.",
+          );
+        }
+      },
+      onError: (err) => {
+        setActiveDemoRole(null);
+        const msg = err.message || "Unable to sign in with this demo account.";
+        setServerError(msg);
+        toast.error(msg);
+      },
     });
   };
 
-  const handleForgotPassword = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const result = forgotPasswordSchema.safeParse({ email: forgotEmail });
-    if (!result.success)
-      return toast.error(
-        result.error.issues[0]?.message || "Enter a valid email.",
-      );
-    forgotMutation.mutate(forgotEmail, {
+  const onForgotSubmit = (data: { email: string }) => {
+    forgotMutation.mutate(data.email, {
       onSuccess: () => {
-        toast.success("Password reset link sent.");
+        toast.success("Password reset link sent to your email.");
         setShowForgot(false);
-        setForgotEmail("");
+        resetForgot();
       },
-      onError: (mutationError) =>
-        toast.error(mutationError.message || "Unable to request a reset link."),
+      onError: (err) => {
+        toast.error(err.message || "Unable to request a reset link.");
+      },
     });
   };
 
@@ -158,35 +196,61 @@ export function LoginForm() {
               Sign in to your account
             </h1>
             <p className="text-sm text-muted-foreground">
-              Access your room search, applications, and messages.
+              Access your housing dashboard, bookings, or property management.
             </p>
           </div>
-          <div className="mt-6 space-y-2 rounded-2xl border border-border/50 bg-muted/40 p-3.5">
-            <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              <UserCheck className="h-3.5 w-3.5 text-indigo-500" /> One-click
-              demo login
+
+          {/* One-Click Role Login Cards */}
+          <div className="mt-6 space-y-2.5 rounded-2xl border border-indigo-500/20 bg-indigo-500/5 p-4 text-left">
+            <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-300">
+              <UserCheck className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />{" "}
+              One-Click Demo Login
             </p>
-            <div className="grid grid-cols-3 gap-2">
-              {demoAccounts.map(({ role, label, icon: Icon }) => (
-                <button
-                  key={role}
-                  type="button"
-                  onClick={() => handleDemoLogin(role)}
-                  disabled={demoMutation.isPending}
-                  className="flex items-center justify-center gap-1.5 rounded-xl border border-indigo-500/20 bg-indigo-500/5 px-2 py-2 text-xs font-medium text-indigo-600 transition-colors hover:bg-indigo-500/15 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <Icon className="h-3.5 w-3.5" />
-                  {label}
-                </button>
-              ))}
+            <p className="text-[11px] text-muted-foreground">
+              Select any role below for instant authenticated access via
+              environment-configured test accounts.
+            </p>
+            <div className="grid grid-cols-1 gap-2.5 pt-1 sm:grid-cols-3">
+              {demoAccounts.map(({ role, label, sublabel, icon: Icon }) => {
+                const isThisLoading =
+                  demoMutation.isPending && activeDemoRole === role;
+                return (
+                  <button
+                    key={role}
+                    type="button"
+                    onClick={() => handleDemoLogin(role)}
+                    disabled={demoMutation.isPending}
+                    className="group flex flex-col items-start gap-1 rounded-xl border border-indigo-500/20 bg-card p-3 text-left transition-all hover:border-indigo-500 hover:bg-indigo-500/10 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <div className="flex w-full items-center justify-between">
+                      <span className="font-heading text-xs font-semibold text-foreground group-hover:text-indigo-600">
+                        {label}
+                      </span>
+                      {isThisLoading ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin text-indigo-600" />
+                      ) : (
+                        <Icon className="h-3.5 w-3.5 text-indigo-500 transition-transform group-hover:scale-110" />
+                      )}
+                    </div>
+                    <span className="text-[10px] text-muted-foreground">
+                      {sublabel}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
-          {error && (
+
+          {serverError && (
             <p className="mt-4 rounded-xl border border-destructive/20 bg-destructive/10 p-3 text-xs text-destructive">
-              {error}
+              {serverError}
             </p>
           )}
-          <form onSubmit={handleSubmit} className="mt-6 space-y-4 text-left">
+
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="mt-6 space-y-4 text-left"
+          >
             <div className="space-y-1.5">
               <label htmlFor="login-email" className="text-xs font-semibold">
                 Email address
@@ -196,14 +260,18 @@ export function LoginForm() {
                 <Input
                   id="login-email"
                   type="email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
+                  {...register("email")}
                   placeholder="name@domain.com"
                   className="h-11 rounded-2xl pl-10"
-                  required
                 />
               </div>
+              {errors.email && (
+                <p className="text-[11px] text-destructive">
+                  {errors.email.message}
+                </p>
+              )}
             </div>
+
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <label
@@ -225,11 +293,9 @@ export function LoginForm() {
                 <Input
                   id="login-password"
                   type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
+                  {...register("password")}
                   placeholder="Your password"
                   className="h-11 rounded-2xl px-10"
-                  required
                 />
                 <button
                   type="button"
@@ -244,54 +310,65 @@ export function LoginForm() {
                   )}
                 </button>
               </div>
+              {errors.password && (
+                <p className="text-[11px] text-destructive">
+                  {errors.password.message}
+                </p>
+              )}
             </div>
+
             <Button
               type="submit"
               disabled={loginMutation.isPending}
-              className="h-11 w-full rounded-2xl bg-indigo-600 text-white"
+              className="h-11 w-full rounded-2xl bg-indigo-600 text-white hover:bg-indigo-700"
             >
               {loginMutation.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <>
-                  Sign in <ArrowRight className="h-4 w-4" />
+                  Sign in <ArrowRight className="h-4 w-4 ml-1" />
                 </>
               )}
             </Button>
           </form>
+
           <div className="my-6 flex items-center gap-3 text-[11px] uppercase tracking-wider text-muted-foreground">
             <span className="h-px flex-1 bg-border" />
             or continue with
             <span className="h-px flex-1 bg-border" />
           </div>
+
           <div className="flex justify-center">
             <GoogleLogin
               onSuccess={({ credential }) => {
-                if (credential)
+                if (credential) {
                   googleMutation.mutate(
                     { idToken: credential },
                     {
-                      onSuccess: (response) =>
-                        response.success && response.data
-                          ? finishLogin(
-                              response.data,
-                              "google-user",
-                              "TENANT",
-                              router,
-                            )
-                          : toast.error(
-                              response.message || "Google sign in failed.",
-                            ),
-                      onError: (mutationError) =>
-                        toast.error(
-                          mutationError.message || "Google sign in failed.",
-                        ),
+                      onSuccess: (response) => {
+                        if (response.success && response.data) {
+                          finishLogin(
+                            response.data,
+                            "google-user@example.com",
+                            "TENANT",
+                          );
+                        } else {
+                          toast.error(
+                            response.message || "Google sign in failed.",
+                          );
+                        }
+                      },
+                      onError: (err) => {
+                        toast.error(err.message || "Google sign in failed.");
+                      },
                     },
                   );
+                }
               }}
               onError={() => toast.error("Google sign in was cancelled.")}
             />
           </div>
+
           <p className="mt-6 text-center text-xs text-muted-foreground">
             Don&apos;t have an account?{" "}
             <Link
@@ -303,30 +380,50 @@ export function LoginForm() {
           </p>
         </div>
       </div>
+
       {showForgot && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="w-full max-w-md rounded-3xl bg-card p-6 shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-3xl border border-border bg-card p-6 shadow-2xl">
             <h2 className="font-heading text-lg font-bold">
               Reset your password
             </h2>
-            <form onSubmit={handleForgotPassword} className="mt-4 space-y-4">
+            <p className="mt-1 text-xs text-muted-foreground">
+              Enter your email address to receive a secure password reset link.
+            </p>
+            <form
+              onSubmit={handleForgotSubmit(onForgotSubmit)}
+              className="mt-4 space-y-4"
+            >
               <Input
                 type="email"
-                value={forgotEmail}
-                onChange={(event) => setForgotEmail(event.target.value)}
+                {...registerForgot("email")}
                 placeholder="name@domain.com"
-                required
+                className="h-10 rounded-xl"
               />
+              {forgotErrors.email && (
+                <p className="text-[11px] text-destructive">
+                  {forgotErrors.email.message}
+                </p>
+              )}
               <div className="flex justify-end gap-2">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setShowForgot(false)}
+                  className="rounded-xl"
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={forgotMutation.isPending}>
-                  Send link
+                <Button
+                  type="submit"
+                  disabled={forgotMutation.isPending}
+                  className="rounded-xl bg-indigo-600 text-white hover:bg-indigo-700"
+                >
+                  {forgotMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    "Send link"
+                  )}
                 </Button>
               </div>
             </form>

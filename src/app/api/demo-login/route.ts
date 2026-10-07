@@ -2,18 +2,18 @@ import { NextResponse } from "next/server";
 import { loginUser } from "@/api/auth.api";
 import type { Role } from "@/interfaces";
 
-const credentials: Record<Role, { email?: string; password?: string }> = {
+const credentials: Record<Role, { email: string; password: string }> = {
   TENANT: {
-    email: process.env.TESTER_TENANT_EMAIL,
-    password: process.env.TESTER_TENANT_PASSWORD,
+    email: process.env.TESTER_TENANT_EMAIL || "testertenant@example.com",
+    password: process.env.TESTER_TENANT_PASSWORD || "testertenant@1234",
   },
   OWNER: {
-    email: process.env.TESTER_OWNER_EMAIL,
-    password: process.env.TESTER_OWNER_PASSWORD,
+    email: process.env.TESTER_OWNER_EMAIL || "testerowner@example.com",
+    password: process.env.TESTER_OWNER_PASSWORD || "testerowner@1234",
   },
   ADMIN: {
-    email: process.env.TESTER_ADMIN_EMAIL,
-    password: process.env.TESTER_ADMIN_PASSWORD,
+    email: process.env.TESTER_ADMIN_EMAIL || "testeradmin@example.com",
+    password: process.env.TESTER_ADMIN_PASSWORD || "testeradmin@1234",
   },
 };
 

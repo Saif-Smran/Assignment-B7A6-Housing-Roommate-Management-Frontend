@@ -1,42 +1,31 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { Loader2, Users } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "react-toastify";
-import {
-  type AdminUser,
-  getAdminUsers,
-  updateAdminUserRole,
-} from "@/api/admin.api";
+import { updateAdminUserRole } from "@/api/admin.api";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAdminUsersQuery } from "@/hooks/useQueries";
 import type { Role } from "@/interfaces";
 
 const roles: Role[] = ["TENANT", "OWNER", "ADMIN"];
 
 export default function AdminUsersPage() {
-  const [users, setUsers] = useState<AdminUser[]>([]);
+  const queryClient = useQueryClient();
   const [roleFilter, setRoleFilter] = useState<Role | "">("");
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
 
-  const loadUsers = () => {
-    setLoading(true);
-    getAdminUsers({ page, role: roleFilter || undefined })
-      .then((response) => {
-        if (response.success && response.data) {
-          setUsers(response.data.data);
-          setTotalPages(response.data.meta.totalPages);
-        } else toast.error(response.message || "Unable to load users.");
-      })
-      .catch(() => toast.error("Unable to load users."))
-      .finally(() => setLoading(false));
-  };
+  const { data, isLoading: loading } = useAdminUsersQuery({
+    page,
+    role: roleFilter || undefined,
+  });
 
-  useEffect(loadUsers, [page, roleFilter]);
+  const users = data?.data ?? [];
+  const totalPages = data?.meta.totalPages ?? 1;
 
   const changeRoleFilter = (role: Role | "") => {
     setPage(1);
@@ -51,11 +40,7 @@ export default function AdminUsersPage() {
           toast.error(response.message || "Unable to update role.");
           return;
         }
-        setUsers((current) =>
-          current.map((user) =>
-            user.id === userId ? { ...user, role } : user,
-          ),
-        );
+        queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
         toast.success("User role updated.");
       })
       .catch(() => toast.error("Unable to update role."))

@@ -1,7 +1,9 @@
 "use client";
 
-import { Save } from "lucide-react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Loader2, Save } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import { getOwnProfile, updateOwnProfile } from "@/api/user.api";
 import {
@@ -13,33 +15,57 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import type { User } from "@/interfaces";
 import { getAuthToken } from "@/lib/auth";
+import { type ProfileSchemaType, profileSchema } from "@/validation";
 
 export default function OwnerProfilePage() {
   const [user, setUser] = useState<User | null>(null);
   const [saving, setSaving] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<ProfileSchemaType>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: {
+      fullName: "",
+      phone: "",
+    },
+  });
+
   useEffect(() => {
     getOwnProfile(getAuthToken() || undefined).then((response) => {
-      if (response.success) setUser(response.data);
-      else toast.error(response.message || "Unable to load profile.");
+      if (response.success && response.data) {
+        setUser(response.data);
+        reset({
+          fullName: response.data.fullName,
+          phone: response.data.phone || "",
+        });
+      } else {
+        toast.error(response.message || "Unable to load profile.");
+      }
     });
-  }, []);
-  async function save(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
+  }, [reset]);
+
+  const onSubmit = async (data: ProfileSchemaType) => {
     setSaving(true);
     const response = await updateOwnProfile(
       {
-        fullName: String(form.get("fullName")),
-        phone: String(form.get("phone")),
+        fullName: data.fullName,
+        phone: data.phone || "",
       },
       getAuthToken() || undefined,
     );
-    if (response.success) {
+    if (response.success && response.data) {
       setUser(response.data);
-      toast.success("Profile updated.");
-    } else toast.error(response.message || "Unable to update profile.");
+      toast.success("Profile updated successfully.");
+    } else {
+      toast.error(response.message || "Unable to update profile.");
+    }
     setSaving(false);
-  }
+  };
+
   return (
     <section className={ownerSectionClass}>
       <OwnerPageHeader
@@ -54,33 +80,57 @@ export default function OwnerProfilePage() {
           {!user ? (
             <div className="h-32 animate-pulse rounded-lg bg-muted" />
           ) : (
-            <form onSubmit={save} className="space-y-4">
-              <label
-                htmlFor="owner-full-name"
-                className="block space-y-1 text-sm"
-              >
-                <span>Full name</span>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              <div className="space-y-1 text-sm">
+                <label htmlFor="owner-full-name" className="font-medium">
+                  Full name
+                </label>
                 <Input
                   id="owner-full-name"
-                  name="fullName"
-                  defaultValue={user.fullName}
+                  {...register("fullName")}
                   required
                 />
-              </label>
-              <label htmlFor="owner-email" className="block space-y-1 text-sm">
-                <span>Email</span>
+                {errors.fullName && (
+                  <p className="text-[11px] text-destructive">
+                    {errors.fullName.message}
+                  </p>
+                )}
+              </div>
+              <div className="space-y-1 text-sm">
+                <label htmlFor="owner-email" className="font-medium">
+                  Email
+                </label>
                 <Input id="owner-email" value={user.email} disabled />
-              </label>
-              <label htmlFor="owner-phone" className="block space-y-1 text-sm">
-                <span>Phone</span>
+              </div>
+              <div className="space-y-1 text-sm">
+                <label htmlFor="owner-phone" className="font-medium">
+                  Phone
+                </label>
                 <Input
                   id="owner-phone"
-                  name="phone"
-                  defaultValue={user.phone ?? ""}
+                  {...register("phone")}
+                  placeholder="+880 1700 000000"
                 />
-              </label>
-              <Button type="submit" disabled={saving}>
-                <Save /> {saving ? "Saving..." : "Save changes"}
+                {errors.phone && (
+                  <p className="text-[11px] text-destructive">
+                    {errors.phone.message}
+                  </p>
+                )}
+              </div>
+              <Button
+                type="submit"
+                disabled={saving}
+                className="rounded-xl bg-indigo-600 text-white hover:bg-indigo-700"
+              >
+                {saving ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-2 h-4 w-4" /> Save changes
+                  </>
+                )}
               </Button>
             </form>
           )}

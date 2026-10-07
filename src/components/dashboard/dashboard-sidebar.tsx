@@ -27,8 +27,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import type { Role, User } from "@/interfaces";
-import { getStoredUser } from "@/lib/auth";
+import type { Role } from "@/interfaces";
 
 const roleLabels: Record<Role, string> = {
   ADMIN: "Administrator",
@@ -102,16 +101,12 @@ const linksByRole: Record<
   ],
 };
 
+import { useAuth } from "@/providers/auth.provider";
+
 export function DashboardSidebar() {
   const pathname = usePathname();
-  const [role, setRole] = useState<Role>("TENANT");
-  const [user, setUser] = useState<Partial<User> | null>(null);
-
-  useEffect(() => {
-    const storedUser = getStoredUser<Partial<User>>();
-    setUser(storedUser);
-    if (storedUser?.role) setRole(storedUser.role);
-  }, []);
+  const { user, role: authRole } = useAuth();
+  const role: Role = (authRole || user?.role || "TENANT") as Role;
 
   return (
     <Sidebar>

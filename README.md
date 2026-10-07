@@ -1,6 +1,19 @@
 # UrbanMatch
 
+> **Live Production URL**: [https://b7a7.vercel.app/](https://b7a7.vercel.app/)  
+> **Backend API**: [https://b7-a6.vercel.app/api](https://b7-a6.vercel.app/api)
+
 UrbanMatch is a Next.js housing and roommate management platform for tenants, property owners, and administrators. It connects verified property listings with room applications, viewing requests, maintenance tracking, and Stripe Checkout payments.
+
+## Demo Evaluation Credentials
+
+You can use the **One-Click Demo Login** buttons directly on the `/login` page or use the credentials below:
+
+| Role | Interface | Demo Email | Demo Password | Default Dashboard |
+|---|---|---|---|---|
+| **Admin** | Platform Moderator | `testeradmin@example.com` | `testeradmin@1234` | `/dashboard/admin` |
+| **Provider / Owner** | Property Management | `testerowner@example.com` | `testerowner@1234` | `/dashboard/owner` |
+| **User / Tenant** | Room & Flatmate Finder | `testertenant@example.com` | `testertenant@1234` | `/dashboard/tenant` |
 
 ## Features
 
@@ -8,19 +21,22 @@ UrbanMatch is a Next.js housing and roommate management platform for tenants, pr
 - Tenant dashboard for applications, viewing requests, maintenance tickets, payments, and profile management.
 - Owner dashboard for properties, rooms, applications, tenant assignment, viewings, maintenance, earnings, and profile management.
 - Admin dashboard for platform statistics, users, and property moderation.
-- JWT-based authentication with tenant, owner, and admin role routing.
-- Stripe Checkout integration for rent, deposits, and utility payments.
+- Server-side Next.js `middleware.ts` enforcing authentication and 3-role route boundaries.
+- TanStack Query (`@tanstack/react-query`) for cached, reactive server state management.
+- React Hook Form + Zod for type-safe form validation matching backend schemas.
+- Stripe Checkout integration for rent, deposits, and utility payments with dedicated success and cancel receipt pages.
+- App Router architecture with dedicated `layout.tsx`, `loading.tsx` skeletons, and `error.tsx` error boundaries.
 - Responsive UI built with Tailwind CSS, shadcn-style components, Lucide icons, and React Toastify notifications.
 - Dynamic route metadata and a branded UrbanMatch favicon.
 
 ## Tech Stack
 
-- Next.js 16 App Router
+- Next.js 16 App Router (Server Components + Client Components)
 - React 19 and TypeScript
 - Tailwind CSS 4
 - TanStack Query
-- Zod
-- Stripe Checkout through the backend API
+- React Hook Form + Zod
+- Stripe Checkout
 - Leaflet and React Leaflet
 - Bun
 
@@ -77,12 +93,12 @@ Create a `.env` file in the project root. Do not commit secrets.
 NEXT_PUBLIC_API_BASE_URL=https://your-backend.example.com/api
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 
-TESTER_ADMIN_EMAIL=
-TESTER_ADMIN_PASSWORD=
-TESTER_OWNER_EMAIL=
-TESTER_OWNER_PASSWORD=
-TESTER_TENANT_EMAIL=
-TESTER_TENANT_PASSWORD=
+TESTER_ADMIN_EMAIL=testeradmin@example.com
+TESTER_ADMIN_PASSWORD=testeradmin@1234
+TESTER_OWNER_EMAIL=testerowner@example.com
+TESTER_OWNER_PASSWORD=testerowner@1234
+TESTER_TENANT_EMAIL=testertenant@example.com
+TESTER_TENANT_PASSWORD=testertenant@1234
 
 NEXT_PUBLIC_GOOGLE_CLIENT_ID=
 NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=

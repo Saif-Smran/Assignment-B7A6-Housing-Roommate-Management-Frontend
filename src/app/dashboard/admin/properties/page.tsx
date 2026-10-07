@@ -1,33 +1,25 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { Building2, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "react-toastify";
-import { deleteAdminProperty, getAdminProperties } from "@/api/admin.api";
+import { deleteAdminProperty } from "@/api/admin.api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAdminPropertiesQuery } from "@/hooks/useQueries";
 import type { PropertyDetails } from "@/interfaces";
 
 export default function AdminPropertiesPage() {
-  const [properties, setProperties] = useState<PropertyDetails[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
 
-  useEffect(() => {
-    setLoading(true);
-    getAdminProperties({ page })
-      .then((response) => {
-        if (response.success && response.data) {
-          setProperties(response.data.data);
-          setTotalPages(response.data.meta.totalPages);
-        } else toast.error(response.message || "Unable to load properties.");
-      })
-      .catch(() => toast.error("Unable to load properties."))
-      .finally(() => setLoading(false));
-  }, [page]);
+  const { data, isLoading: loading } = useAdminPropertiesQuery({ page });
+
+  const properties = data?.data ?? [];
+  const totalPages = data?.meta.totalPages ?? 1;
 
   const removeProperty = (propertyId: string) => {
     if (!window.confirm("Delete this property permanently?")) return;
@@ -38,9 +30,7 @@ export default function AdminPropertiesPage() {
           toast.error(response.message || "Unable to delete property.");
           return;
         }
-        setProperties((current) =>
-          current.filter((property) => property.id !== propertyId),
-        );
+        queryClient.invalidateQueries({ queryKey: ["admin", "properties"] });
         toast.success("Property deleted.");
       })
       .catch(() => toast.error("Unable to delete property."))

@@ -52,3 +52,11 @@ export const forgotPasswordSchema = z.object({
 });
 
 export type ForgotPasswordSchemaType = z.infer<typeof forgotPasswordSchema>;
+
+// Zod Schema for Profile Update
+export const profileSchema = z.object({
+  fullName: z.string().trim().min(2, "Full name must be at least 2 characters"),
+  phone: z.string().trim().optional(),
+});
+
+export type ProfileSchemaType = z.infer<typeof profileSchema>;

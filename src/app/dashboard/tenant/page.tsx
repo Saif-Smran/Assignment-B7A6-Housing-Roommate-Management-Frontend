@@ -10,14 +10,12 @@ import {
   Search,
 } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
-import { getMyApplications } from "@/api/applications.api";
-import { getMyPayments } from "@/api/payments.api";
-import { getViewingRequests } from "@/api/viewings.api";
+import { useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useTenantDashboardQuery } from "@/hooks/useQueries";
 import type { Application, Payment, ViewingRequest } from "@/interfaces";
-import { getAuthToken, getStoredUser } from "@/lib/auth";
+import { useAuth } from "@/providers/auth.provider";
 
 type TenantData = {
   applications: Application[];
@@ -47,38 +45,14 @@ function formatDate(value: string) {
 }
 
 export default function TenantDashboardPage() {
-  const [data, setData] = useState<TenantData>(emptyData);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const user = getStoredUser<{ fullName?: string }>();
-
-  useEffect(() => {
-    const token = getAuthToken() || undefined;
-    Promise.all([
-      getMyApplications(token),
-      getViewingRequests(token),
-      getMyPayments(
-        { limit: 50, sortBy: "createdAt", sortOrder: "desc" },
-        token,
-      ),
-    ])
-      .then(([applications, viewings, payments]) => {
-        const failedResponse = [applications, viewings, payments].find(
-          (response) => !response.success,
-        );
-        if (failedResponse) {
-          setError(failedResponse.message || "Unable to load your dashboard.");
-          return;
-        }
-        setData({
-          applications: applications.data?.items ?? [],
-          viewings: viewings.data?.items ?? [],
-          payments: payments.data?.items ?? [],
-        });
-      })
-      .catch(() => setError("Unable to load your dashboard."))
-      .finally(() => setLoading(false));
-  }, []);
+  const { user } = useAuth();
+  const {
+    data: queryData,
+    isLoading: loading,
+    error: queryError,
+  } = useTenantDashboardQuery();
+  const error = queryError ? "Unable to load your dashboard." : null;
+  const data: TenantData = queryData ?? emptyData;
 
   const upcomingViewings = useMemo(
     () =>

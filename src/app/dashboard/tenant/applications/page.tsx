@@ -1,12 +1,10 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { Ban, ClipboardList } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "react-toastify";
-import {
-  getMyApplications,
-  updateApplicationStatus,
-} from "@/api/applications.api";
+import { updateApplicationStatus } from "@/api/applications.api";
 import {
   TenantEmpty,
   TenantPageHeader,
@@ -16,6 +14,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useTenantApplicationsQuery } from "@/hooks/useQueries";
 import type { Application, ApplicationStatus } from "@/interfaces";
 import { getAuthToken } from "@/lib/auth";
 
@@ -26,19 +25,15 @@ const filters: Array<"ALL" | ApplicationStatus> = [
   "REJECTED",
   "CANCELLED",
 ];
+
 export default function TenantApplicationsPage() {
-  const [applications, setApplications] = useState<Application[]>([]);
+  const queryClient = useQueryClient();
+  const { data, isLoading: loading } = useTenantApplicationsQuery();
   const [filter, setFilter] = useState<(typeof filters)[number]>("ALL");
-  const [loading, setLoading] = useState(true);
   const token = getAuthToken() || undefined;
-  useEffect(() => {
-    getMyApplications(token)
-      .then((response) => {
-        if (response.success) setApplications(response.data?.items ?? []);
-        else toast.error(response.message || "Unable to load applications.");
-      })
-      .finally(() => setLoading(false));
-  }, [token]);
+
+  const applications = data ?? [];
+
   const visibleApplications = useMemo(
     () =>
       applications.filter(
@@ -46,20 +41,17 @@ export default function TenantApplicationsPage() {
       ),
     [applications, filter],
   );
+
   async function cancel(application: Application) {
     const response = await updateApplicationStatus(
       application.id,
       "CANCELLED",
       token,
     );
-    if (!response.success)
+    if (!response.success) {
       toast.error(response.message || "Unable to cancel application.");
-    else {
-      setApplications((current) =>
-        current.map((item) =>
-          item.id === application.id ? { ...item, status: "CANCELLED" } : item,
-        ),
-      );
+    } else {
+      queryClient.invalidateQueries({ queryKey: ["tenant"] });
       toast.success("Application cancelled.");
     }
   }

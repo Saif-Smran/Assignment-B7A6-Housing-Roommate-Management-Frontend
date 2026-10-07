@@ -11,20 +11,12 @@ import {
   ownerSectionClass,
 } from "@/components/owner/owner-ui";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useOwnerEarningsQuery } from "@/hooks/useQueries";
 import type { Payment } from "@/interfaces";
-import { getAuthToken } from "@/lib/auth";
 
 export default function OwnerEarningsPage() {
-  const [payments, setPayments] = useState<Payment[]>([]);
-  const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    getOwnerEarnings(getAuthToken() || undefined)
-      .then((response) => {
-        if (response.success) setPayments(response.data?.payments ?? []);
-        else toast.error(response.message || "Unable to load earnings.");
-      })
-      .finally(() => setLoading(false));
-  }, []);
+  const { data, isLoading: loading } = useOwnerEarningsQuery();
+  const payments = data?.payments ?? [];
   const completed = useMemo(
     () => payments.filter((payment) => payment.status === "COMPLETED"),
     [payments],

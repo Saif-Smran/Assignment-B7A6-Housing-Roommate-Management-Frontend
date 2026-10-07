@@ -43,6 +43,10 @@ export function setAuthToken(token: string, user?: unknown): void {
 
   if (user) {
     localStorage.setItem("user", JSON.stringify(user));
+    const role = (user as { role?: string })?.role;
+    if (role) {
+      document.cookie = `role=${role}; path=/; expires=${expires}; SameSite=Lax`;
+    }
   }
 
   window.dispatchEvent(new Event("auth-state-changed"));
@@ -81,5 +85,6 @@ export function logoutUser(): void {
     "accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
   document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
   document.cookie = "authToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+  document.cookie = "role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
   window.dispatchEvent(new Event("auth-state-changed"));
 }

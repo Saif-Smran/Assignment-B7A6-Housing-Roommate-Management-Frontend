@@ -12,15 +12,8 @@ import {
   Plus,
 } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import {
-  getApplicationsForProperties,
-  syncPaidOwnerApplications,
-} from "@/api/applications.api";
-import { getMyPayments } from "@/api/payments.api";
-import { getProperties } from "@/api/properties.api";
-import { getMaintenanceRequests, getViewingRequests } from "@/api/viewings.api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useOwnerFullDashboardQuery } from "@/hooks/useQueries";
 import type {
   Application,
   MaintenanceRequest,
@@ -28,7 +21,6 @@ import type {
   PropertyDetails,
   ViewingRequest,
 } from "@/interfaces";
-import { getAuthToken } from "@/lib/auth";
 
 type OwnerData = {
   properties: PropertyDetails[];
@@ -68,64 +60,13 @@ function formatDate(value: string) {
 }
 
 export default function OwnerDashboardPage() {
-  const [data, setData] = useState<OwnerData>(emptyData);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const token = getAuthToken() || undefined;
-
-    async function loadOwnerData() {
-      const properties = await getProperties({ limit: 50 }, token);
-      if (!properties.success) {
-        setError(properties.message || "Unable to load owner activity.");
-        setLoading(false);
-        return;
-      }
-      const applicationsPromise = getApplicationsForProperties(
-        properties.data?.items.map((property) => property.id) ?? [],
-        token,
-      );
-      const [applications, viewings, maintenance, payments] = await Promise.all(
-        [
-          applicationsPromise,
-          getViewingRequests(token),
-          getMaintenanceRequests(token),
-          getMyPayments(
-            { limit: 50, sortBy: "createdAt", sortOrder: "desc" },
-            token,
-          ),
-        ],
-      );
-      const responses = [applications, viewings, maintenance, payments];
-      const failedResponse = responses.find((response) => !response.success);
-      if (failedResponse) {
-        setError(failedResponse.message || "Unable to load owner activity.");
-        setLoading(false);
-        return;
-      }
-
-      await syncPaidOwnerApplications(
-        applications.data?.items ?? [],
-        payments.data?.items ?? [],
-        token,
-      );
-
-      setData({
-        properties: properties.data?.items ?? [],
-        applications: applications.data?.items ?? [],
-        viewings: viewings.data?.items ?? [],
-        maintenance: maintenance.data?.items ?? [],
-        payments: payments.data?.items ?? [],
-      });
-      setLoading(false);
-    }
-
-    void loadOwnerData().catch(() => {
-      setError("Unable to load owner activity.");
-      setLoading(false);
-    });
-  }, []);
+  const {
+    data: queryData,
+    isLoading: loading,
+    error: queryError,
+  } = useOwnerFullDashboardQuery();
+  const error = queryError ? "Unable to load owner activity." : null;
+  const data: OwnerData = queryData ?? emptyData;
 
   const roomCount = data.properties.reduce(
     (total, property) => total + (property.rooms?.length ?? 0),

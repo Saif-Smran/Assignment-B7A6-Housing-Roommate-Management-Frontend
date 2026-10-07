@@ -1,5 +1,6 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { GoogleLogin } from "@react-oauth/google";
 import {
   ArrowRight,
@@ -10,13 +11,13 @@ import {
   Lock,
   Mail,
   Phone,
-  ShieldCheck,
   User,
   Users,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import { AuthLottie } from "@/components/auth/auth-lottie";
 import { Button } from "@/components/ui/button";
@@ -26,80 +27,104 @@ import {
   useRegisterMutation,
 } from "@/hooks/useAuthMutations";
 import type { AuthResponseData, Role } from "@/interfaces";
-import { getDashboardPath, setAuthToken } from "@/lib/auth";
-import { registerSchema } from "@/validation";
-
-function completeRegistration(
-  response: AuthResponseData,
-  email: string,
-  fullName: string,
-  role: Role,
-  router: ReturnType<typeof useRouter>,
-) {
-  const user = response.user || {
-    id: `user-${Date.now()}`,
-    email,
-    fullName,
-    role,
-  };
-  setAuthToken(
-    response.token || response.accessToken || `session-${Date.now()}`,
-    user,
-  );
-  toast.success(`Welcome to UrbanMatch, ${fullName}!`);
-  router.push(getDashboardPath(user.role));
-}
+import { getDashboardPath } from "@/lib/auth";
+import { useAuth } from "@/providers/auth.provider";
+import { type RegisterSchemaType, registerSchema } from "@/validation";
 
 export function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [role, setRole] = useState<Role>("TENANT");
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
-  const [agreeTerms, setAgreeTerms] = useState(true);
-  const [error, setError] = useState("");
+  const [serverError, setServerError] = useState("");
   const registerMutation = useRegisterMutation();
   const googleMutation = useGoogleAuthMutation();
 
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<RegisterSchemaType>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      fullName: "",
+      email: "",
+      phone: "",
+      role: "TENANT",
+      password: "",
+      confirmPassword: "",
+      agreeTerms: true,
+    },
+  });
+
+  const selectedRole = watch("role");
+
   useEffect(() => {
     const requestedRole = searchParams.get("role");
-    if (requestedRole === "OWNER" || requestedRole === "LANDLORD")
-      setRole("OWNER");
-    if (requestedRole === "TENANT") setRole("TENANT");
-  }, [searchParams]);
-
-  const submit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setError("");
-    const result = registerSchema.safeParse({
-      fullName,
-      email,
-      phone,
-      role,
-      password,
-      confirmPassword,
-      agreeTerms,
-    });
-    if (!result.success) {
-      const message =
-        result.error.issues[0]?.message || "Please check the form.";
-      setError(message);
-      toast.error(message);
-      return;
+    if (requestedRole === "OWNER" || requestedRole === "LANDLORD") {
+      setValue("role", "OWNER");
+    } else if (requestedRole === "TENANT") {
+      setValue("role", "TENANT");
     }
+  }, [searchParams, setValue]);
+
+  const finishRegister = (
+    response: AuthResponseData,
+    email: string,
+    fullName: string,
+    role: Role,
+  ) => {
+    const user = response.user || {
+      id: `user-${Date.now()}`,
+      email,
+      fullName,
+      role,
+      passwordHash: null,
+      googleId: null,
+      phone: null,
+      profileImage: null,
+      provider: "CREDENTIAL" as const,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      deletedAt: null,
+    };
+
+    const token =
+      response.token || response.accessToken || `session-${Date.now()}`;
+
+    login(token, user);
+    toast.success(`Welcome to UrbanMatch, ${fullName}!`);
+    router.push(getDashboardPath(user.role));
+  };
+
+  const onSubmit = (data: RegisterSchemaType) => {
+    setServerError("");
     registerMutation.mutate(
-      { fullName, email, phone, password, role },
       {
-        onSuccess: (response) =>
-          response.success && response.data
-            ? completeRegistration(response.data, email, fullName, role, router)
-            : setError(response.message || "Unable to create your account."),
-        onError: (mutationError) =>
-          setError(mutationError.message || "Unable to create your account."),
+        fullName: data.fullName,
+        email: data.email,
+        phone: data.phone,
+        password: data.password,
+        role: data.role,
+      },
+      {
+        onSuccess: (response) => {
+          if (response.success && response.data) {
+            finishRegister(response.data, data.email, data.fullName, data.role);
+          } else {
+            setServerError(
+              response.message || "Unable to create your account.",
+            );
+            toast.error(response.message || "Unable to create your account.");
+          }
+        },
+        onError: (err) => {
+          const msg = err.message || "Unable to create your account.";
+          setServerError(msg);
+          toast.error(msg);
+        },
       },
     );
   };
@@ -116,33 +141,54 @@ export function RegisterForm() {
               Create your account
             </h1>
             <p className="text-sm text-muted-foreground">
-              Choose your role and start finding your next place.
+              Choose your role and start exploring or managing verified
+              listings.
             </p>
           </div>
+
+          {/* Role selector */}
           <div className="mt-6 grid grid-cols-2 gap-3">
             <button
               type="button"
-              onClick={() => setRole("TENANT")}
-              className={`flex items-center justify-center gap-2 rounded-2xl border p-3 text-xs font-semibold ${role === "TENANT" ? "border-indigo-500 bg-indigo-500/10 text-indigo-600" : "border-border text-muted-foreground"}`}
+              onClick={() => setValue("role", "TENANT")}
+              className={`flex items-center justify-center gap-2 rounded-2xl border p-3 text-xs font-semibold transition-all ${
+                selectedRole === "TENANT"
+                  ? "border-indigo-500 bg-indigo-500/10 text-indigo-600 shadow-sm"
+                  : "border-border text-muted-foreground hover:border-border/80"
+              }`}
             >
               <Users className="h-4 w-4" />
-              Tenant
+              Tenant (User)
             </button>
             <button
               type="button"
-              onClick={() => setRole("OWNER")}
-              className={`flex items-center justify-center gap-2 rounded-2xl border p-3 text-xs font-semibold ${role === "OWNER" ? "border-indigo-500 bg-indigo-500/10 text-indigo-600" : "border-border text-muted-foreground"}`}
+              onClick={() => setValue("role", "OWNER")}
+              className={`flex items-center justify-center gap-2 rounded-2xl border p-3 text-xs font-semibold transition-all ${
+                selectedRole === "OWNER"
+                  ? "border-indigo-500 bg-indigo-500/10 text-indigo-600 shadow-sm"
+                  : "border-border text-muted-foreground hover:border-border/80"
+              }`}
             >
               <Building2 className="h-4 w-4" />
-              Owner
+              Owner (Provider)
             </button>
           </div>
-          {error && (
-            <p className="mt-4 rounded-xl border border-destructive/20 bg-destructive/10 p-3 text-xs text-destructive">
-              {error}
+          {errors.role && (
+            <p className="mt-1 text-[11px] text-destructive">
+              {errors.role.message}
             </p>
           )}
-          <form onSubmit={submit} className="mt-5 space-y-4 text-left">
+
+          {serverError && (
+            <p className="mt-4 rounded-xl border border-destructive/20 bg-destructive/10 p-3 text-xs text-destructive">
+              {serverError}
+            </p>
+          )}
+
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="mt-5 space-y-4 text-left"
+          >
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <label
@@ -155,33 +201,42 @@ export function RegisterForm() {
                   <User className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     id="register-name"
-                    value={fullName}
-                    onChange={(event) => setFullName(event.target.value)}
+                    {...register("fullName")}
                     placeholder="Jane Doe"
                     className="h-11 rounded-2xl pl-10"
-                    required
                   />
                 </div>
+                {errors.fullName && (
+                  <p className="text-[11px] text-destructive">
+                    {errors.fullName.message}
+                  </p>
+                )}
               </div>
+
               <div className="space-y-1.5">
                 <label
                   htmlFor="register-phone"
                   className="text-xs font-semibold"
                 >
-                  Phone
+                  Phone (Optional)
                 </label>
                 <div className="relative">
                   <Phone className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     id="register-phone"
-                    value={phone}
-                    onChange={(event) => setPhone(event.target.value)}
-                    placeholder="+1 555 000 0000"
+                    {...register("phone")}
+                    placeholder="+880 1700 000000"
                     className="h-11 rounded-2xl pl-10"
                   />
                 </div>
+                {errors.phone && (
+                  <p className="text-[11px] text-destructive">
+                    {errors.phone.message}
+                  </p>
+                )}
               </div>
             </div>
+
             <div className="space-y-1.5">
               <label htmlFor="register-email" className="text-xs font-semibold">
                 Email address
@@ -191,14 +246,18 @@ export function RegisterForm() {
                 <Input
                   id="register-email"
                   type="email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
+                  {...register("email")}
                   placeholder="name@domain.com"
                   className="h-11 rounded-2xl pl-10"
-                  required
                 />
               </div>
+              {errors.email && (
+                <p className="text-[11px] text-destructive">
+                  {errors.email.message}
+                </p>
+              )}
             </div>
+
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <label
@@ -212,11 +271,9 @@ export function RegisterForm() {
                   <Input
                     id="register-password"
                     type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(event) => setPassword(event.target.value)}
+                    {...register("password")}
                     placeholder="At least 6 characters"
                     className="h-11 rounded-2xl px-10"
-                    required
                   />
                   <button
                     type="button"
@@ -231,7 +288,13 @@ export function RegisterForm() {
                     )}
                   </button>
                 </div>
+                {errors.password && (
+                  <p className="text-[11px] text-destructive">
+                    {errors.password.message}
+                  </p>
+                )}
               </div>
+
               <div className="space-y-1.5">
                 <label
                   htmlFor="register-confirm"
@@ -244,76 +307,98 @@ export function RegisterForm() {
                   <Input
                     id="register-confirm"
                     type={showPassword ? "text" : "password"}
-                    value={confirmPassword}
-                    onChange={(event) => setConfirmPassword(event.target.value)}
-                    placeholder="Repeat password"
+                    {...register("confirmPassword")}
+                    placeholder="Confirm your password"
                     className="h-11 rounded-2xl pl-10"
-                    required
                   />
                 </div>
+                {errors.confirmPassword && (
+                  <p className="text-[11px] text-destructive">
+                    {errors.confirmPassword.message}
+                  </p>
+                )}
               </div>
             </div>
-            <label className="flex items-start gap-2 text-xs text-muted-foreground">
+
+            <div className="flex items-start gap-2 pt-1">
               <input
+                id="register-terms"
                 type="checkbox"
-                checked={agreeTerms}
-                onChange={(event) => setAgreeTerms(event.target.checked)}
-                className="mt-0.5"
+                {...register("agreeTerms")}
+                className="mt-1 h-4 w-4 rounded border-border text-indigo-600 focus:ring-indigo-500"
               />
-              <span>I agree to the Terms of Service and Privacy Policy.</span>
-            </label>
+              <label
+                htmlFor="register-terms"
+                className="text-xs text-muted-foreground"
+              >
+                I agree to the{" "}
+                <Link href="/faq" className="text-indigo-600 underline">
+                  Terms of Service
+                </Link>{" "}
+                and Privacy Policy.
+              </label>
+            </div>
+            {errors.agreeTerms && (
+              <p className="text-[11px] text-destructive">
+                {errors.agreeTerms.message}
+              </p>
+            )}
+
             <Button
               type="submit"
               disabled={registerMutation.isPending}
-              className="h-11 w-full rounded-2xl bg-indigo-600 text-white"
+              className="h-11 w-full rounded-2xl bg-indigo-600 text-white hover:bg-indigo-700"
             >
               {registerMutation.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <>
-                  <ShieldCheck className="h-4 w-4" />
-                  Create {role === "OWNER" ? "owner" : "tenant"} account{" "}
-                  <ArrowRight className="h-4 w-4" />
+                  Create Account <ArrowRight className="h-4 w-4 ml-1" />
                 </>
               )}
             </Button>
           </form>
+
           <div className="my-6 flex items-center gap-3 text-[11px] uppercase tracking-wider text-muted-foreground">
             <span className="h-px flex-1 bg-border" />
-            or register with
+            or sign up with
             <span className="h-px flex-1 bg-border" />
           </div>
+
           <div className="flex justify-center">
             <GoogleLogin
               onSuccess={({ credential }) => {
-                if (credential)
+                if (credential) {
                   googleMutation.mutate(
-                    { idToken: credential, role },
+                    { idToken: credential, role: selectedRole },
                     {
-                      onSuccess: (response) =>
-                        response.success && response.data
-                          ? completeRegistration(
-                              response.data,
-                              email || "google-user",
-                              fullName || "Google User",
-                              role,
-                              router,
-                            )
-                          : toast.error(
-                              response.message || "Google sign up failed.",
-                            ),
-                      onError: (mutationError) =>
-                        toast.error(
-                          mutationError.message || "Google sign up failed.",
-                        ),
+                      onSuccess: (response) => {
+                        if (response.success && response.data) {
+                          finishRegister(
+                            response.data,
+                            "google-user@example.com",
+                            "Google User",
+                            selectedRole,
+                          );
+                        } else {
+                          toast.error(
+                            response.message || "Google sign in failed.",
+                          );
+                        }
+                      },
+                      onError: (err) => {
+                        toast.error(err.message || "Google sign in failed.");
+                      },
                     },
                   );
+                }
               }}
-              onError={() => toast.error("Google sign up was cancelled.")}
+              onError={() => toast.error("Google sign in was cancelled.")}
             />
           </div>
+
           <p className="mt-6 text-center text-xs text-muted-foreground">
-            Already registered?{" "}
+            Already have an account?{" "}
             <Link
               href="/login"
               className="font-semibold text-indigo-600 hover:underline"

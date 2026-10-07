@@ -1,11 +1,9 @@
 "use client";
 
 import { BarChart3, Building2, ClipboardList, Users } from "lucide-react";
-import { useEffect, useState } from "react";
-import { toast } from "react-toastify";
 import type { AdminDashboardStats } from "@/api/admin.api";
-import { getAdminDashboardStats } from "@/api/admin.api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAdminStatsQuery } from "@/hooks/useQueries";
 
 const statDefinitions = [
   {
@@ -44,18 +42,8 @@ function getStatValue(stats: AdminDashboardStats, keys: string[]) {
 }
 
 export default function AdminOverviewPage() {
-  const [stats, setStats] = useState<AdminDashboardStats>({});
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    getAdminDashboardStats()
-      .then((response) => {
-        if (response.success && response.data) setStats(response.data);
-        else toast.error(response.message || "Unable to load dashboard stats.");
-      })
-      .catch(() => toast.error("Unable to load dashboard stats."))
-      .finally(() => setLoading(false));
-  }, []);
+  const { data: statsData, isLoading: loading } = useAdminStatsQuery();
+  const stats = statsData ?? {};
 
   return (
     <section className="mx-auto max-w-7xl space-y-8 px-4 pb-10 sm:px-6 lg:px-8">
