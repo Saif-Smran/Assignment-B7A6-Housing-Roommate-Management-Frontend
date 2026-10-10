@@ -28,6 +28,7 @@ type OwnerData = {
   viewings: ViewingRequest[];
   maintenance: MaintenanceRequest[];
   payments: Payment[];
+  earnings?: import("@/api/payments.api").OwnerEarningsData | null;
 };
 
 const emptyData: OwnerData = {
@@ -36,6 +37,7 @@ const emptyData: OwnerData = {
   viewings: [],
   maintenance: [],
   payments: [],
+  earnings: null,
 };
 
 const statDefinitions = [
@@ -75,15 +77,23 @@ export default function OwnerDashboardPage() {
   const pendingApplications = data.applications.filter(
     (application) => application.status === "PENDING",
   ).length;
-  const completedEarnings = data.payments
-    .filter((payment) => payment.status === "COMPLETED")
-    .reduce((total, payment) => total + payment.amount, 0);
+  const completedEarnings =
+    data.earnings?.totalEarnings ??
+    data.payments
+      .filter((payment) => payment.status === "COMPLETED")
+      .reduce((total, payment) => total + payment.amount, 0);
   const recentActivity = [
     ...data.applications.map((item) => ({
       id: item.id,
       label: `Application ${item.status.toLowerCase()}`,
       date: item.createdAt,
       icon: ClipboardList,
+    })),
+    ...data.payments.map((item) => ({
+      id: item.id,
+      label: `Payment ${item.status.toLowerCase()} (${item.currency} ${item.amount.toLocaleString()})`,
+      date: item.createdAt,
+      icon: Banknote,
     })),
     ...data.viewings.map((item) => ({
       id: item.id,
@@ -159,6 +169,14 @@ export default function OwnerDashboardPage() {
                 >
                   {loading ? "" : values[key]}
                 </p>
+                {key === "completedEarnings" && (
+                  <Link
+                    href="/dashboard/owner/earnings"
+                    className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-indigo-600 hover:underline"
+                  >
+                    View earnings breakdown <ArrowRight className="h-3 w-3" />
+                  </Link>
+                )}
               </CardContent>
             </Card>
           );

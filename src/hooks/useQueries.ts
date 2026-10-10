@@ -115,21 +115,20 @@ export function useOwnerFullDashboardQuery() {
         propertyIds,
         token || undefined,
       );
-      const [applications, viewings, maintenance, payments] = await Promise.all(
+      const [applications, viewings, maintenance, earningsRes] = await Promise.all(
         [
           applicationsPromise,
           getViewingRequests(token || undefined),
           getMaintenanceRequests(token || undefined),
-          getMyPayments(
-            { limit: 50, sortBy: "createdAt", sortOrder: "desc" },
-            token || undefined,
-          ),
+          getOwnerEarnings(token || undefined),
         ],
       );
 
+      const ownerPayments = earningsRes.data?.payments ?? [];
+
       await syncPaidOwnerApplications(
         applications.data?.items ?? [],
-        payments.data?.items ?? [],
+        ownerPayments,
         token || undefined,
       );
 
@@ -138,7 +137,8 @@ export function useOwnerFullDashboardQuery() {
         applications: applications.data?.items ?? [],
         viewings: viewings.data?.items ?? [],
         maintenance: maintenance.data?.items ?? [],
-        payments: payments.data?.items ?? [],
+        payments: ownerPayments,
+        earnings: earningsRes.data ?? null,
       };
     },
     enabled: Boolean(token),
@@ -176,7 +176,7 @@ export function useAdminStatsQuery() {
   return useQuery({
     queryKey: ["admin", "stats", token],
     queryFn: async () => {
-      const res = await getAdminDashboardStats();
+      const res = await getAdminDashboardStats(token || undefined);
       return res.data ?? null;
     },
     enabled: Boolean(token),
@@ -192,7 +192,7 @@ export function useAdminUsersQuery(params?: {
   return useQuery({
     queryKey: ["admin", "users", token, params],
     queryFn: async () => {
-      const res = await getAdminUsers(params);
+      const res = await getAdminUsers(params, token || undefined);
       return res.data ?? null;
     },
     enabled: Boolean(token),
@@ -207,7 +207,7 @@ export function useAdminPropertiesQuery(params?: {
   return useQuery({
     queryKey: ["admin", "properties", token, params],
     queryFn: async () => {
-      const res = await getAdminProperties(params);
+      const res = await getAdminProperties(params, token || undefined);
       return res.data ?? null;
     },
     enabled: Boolean(token),
