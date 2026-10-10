@@ -1,4 +1,12 @@
-import { ChevronLeft, ChevronRight, FilterX, Sparkles } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  FilterX,
+  MoreHorizontal,
+  Sparkles,
+} from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -28,13 +36,48 @@ interface PropertiesPageProps {
   }>;
 }
 
+function getPaginationRange(
+  currentPage: number,
+  totalPages: number,
+): (number | "ellipsis-start" | "ellipsis-end")[] {
+  if (totalPages <= 7) {
+    return Array.from({ length: totalPages }, (_, i) => i + 1);
+  }
+
+  if (currentPage <= 4) {
+    return [1, 2, 3, 4, 5, "ellipsis-end", totalPages];
+  }
+
+  if (currentPage >= totalPages - 3) {
+    return [
+      1,
+      "ellipsis-start",
+      totalPages - 4,
+      totalPages - 3,
+      totalPages - 2,
+      totalPages - 1,
+      totalPages,
+    ];
+  }
+
+  return [
+    1,
+    "ellipsis-start",
+    currentPage - 1,
+    currentPage,
+    currentPage + 1,
+    "ellipsis-end",
+    totalPages,
+  ];
+}
+
 export default async function PropertiesPage({
   searchParams,
 }: PropertiesPageProps) {
   const resolvedParams = await searchParams;
 
-  const page = Number(resolvedParams.page) || 1;
-  const limit = Number(resolvedParams.limit) || 9;
+  const page = Math.max(1, Number(resolvedParams.page) || 1);
+  const limit = 6; // Display exactly 6 properties per page
   const city = resolvedParams.city;
   const propertyType = resolvedParams.propertyType;
   const minRent = resolvedParams.minRent
@@ -47,7 +90,7 @@ export default async function PropertiesPage({
   const sortOrder = resolvedParams.sortOrder || "desc";
   const q = resolvedParams.q;
 
-  // Fetch properties from backend API
+  // Fetch properties from backend API with 6 items per page limit
   const response = await getProperties({
     page,
     limit,
@@ -74,6 +117,11 @@ export default async function PropertiesPage({
     pagination.pages ||
     Math.ceil(pagination.total / limit) ||
     1;
+
+  const totalItems = pagination.total ?? properties.length;
+  const startItem = totalItems === 0 ? 0 : (page - 1) * limit + 1;
+  const endItem = Math.min(page * limit, totalItems);
+  const paginationRange = getPaginationRange(page, totalPages);
 
   // Helper to construct pagination query string
   const createPageUrl = (targetPage: number) => {
@@ -136,70 +184,150 @@ export default async function PropertiesPage({
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 pt-6 border-t border-border/60">
-                <Button
-                  asChild
-                  variant="outline"
-                  size="sm"
-                  disabled={page <= 1}
-                  className="rounded-xl text-xs gap-1"
-                >
-                  <Link
-                    href={page > 1 ? createPageUrl(page - 1) : "#"}
-                    aria-disabled={page <= 1}
-                    tabIndex={page <= 1 ? -1 : undefined}
-                    className={
-                      page <= 1 ? "pointer-events-none opacity-50" : ""
-                    }
-                  >
-                    <ChevronLeft className="h-3.5 w-3.5" />
-                    Previous
-                  </Link>
-                </Button>
+              <nav
+                aria-label="Pagination Navigation"
+                className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-8 border-t border-border/60"
+              >
+                {/* Result count summary */}
+                <p className="text-xs text-muted-foreground order-2 sm:order-1">
+                  Showing{" "}
+                  <span className="font-semibold text-foreground">
+                    {startItem}–{endItem}
+                  </span>{" "}
+                  of{" "}
+                  <span className="font-semibold text-foreground">
+                    {totalItems}
+                  </span>{" "}
+                  properties (Page {page} of {totalPages})
+                </p>
 
-                <div className="flex items-center gap-1 px-2">
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                    (p) => {
-                      const isCurrent = p === page;
+                {/* Navigation Buttons */}
+                <div className="flex items-center gap-1.5 order-1 sm:order-2">
+                  {/* First page button */}
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="icon"
+                    disabled={page <= 1}
+                    className="h-8 w-8 rounded-lg border-border/60"
+                    title="First page"
+                  >
+                    <Link
+                      href={page > 1 ? createPageUrl(1) : "#"}
+                      aria-disabled={page <= 1}
+                      tabIndex={page <= 1 ? -1 : undefined}
+                      className={
+                        page <= 1 ? "pointer-events-none opacity-40" : ""
+                      }
+                    >
+                      <ChevronsLeft className="h-3.5 w-3.5" />
+                      <span className="sr-only">First page</span>
+                    </Link>
+                  </Button>
+
+                  {/* Previous button */}
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="sm"
+                    disabled={page <= 1}
+                    className="h-8 px-2.5 rounded-lg text-xs gap-1 border-border/60"
+                  >
+                    <Link
+                      href={page > 1 ? createPageUrl(page - 1) : "#"}
+                      aria-disabled={page <= 1}
+                      tabIndex={page <= 1 ? -1 : undefined}
+                      className={
+                        page <= 1 ? "pointer-events-none opacity-40" : ""
+                      }
+                    >
+                      <ChevronLeft className="h-3.5 w-3.5" />
+                      <span className="hidden sm:inline">Previous</span>
+                    </Link>
+                  </Button>
+
+                  {/* Page numbers */}
+                  <div className="flex items-center gap-1 px-1">
+                    {paginationRange.map((item) => {
+                      if (typeof item === "string") {
+                        return (
+                          <span
+                            key={item}
+                            className="flex h-8 w-6 items-center justify-center text-muted-foreground"
+                          >
+                            <MoreHorizontal className="h-3.5 w-3.5" />
+                          </span>
+                        );
+                      }
+
+                      const isCurrent = item === page;
                       return (
                         <Button
-                          key={p}
+                          key={item}
                           asChild
-                          variant={isCurrent ? "default" : "ghost"}
+                          variant={isCurrent ? "default" : "outline"}
                           size="sm"
-                          className={`h-8 w-8 rounded-lg text-xs font-semibold p-0 ${
+                          className={`h-8 w-8 rounded-lg text-xs font-semibold p-0 transition-colors ${
                             isCurrent
-                              ? "bg-indigo-600 text-white"
-                              : "text-muted-foreground hover:text-foreground"
+                              ? "bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm shadow-indigo-500/20"
+                              : "border-border/60 text-muted-foreground hover:text-foreground hover:bg-muted/50"
                           }`}
+                          aria-current={isCurrent ? "page" : undefined}
                         >
-                          <Link href={createPageUrl(p)}>{p}</Link>
+                          <Link href={createPageUrl(item)}>{item}</Link>
                         </Button>
                       );
-                    },
-                  )}
-                </div>
+                    })}
+                  </div>
 
-                <Button
-                  asChild
-                  variant="outline"
-                  size="sm"
-                  disabled={page >= totalPages}
-                  className="rounded-xl text-xs gap-1"
-                >
-                  <Link
-                    href={page < totalPages ? createPageUrl(page + 1) : "#"}
-                    aria-disabled={page >= totalPages}
-                    tabIndex={page >= totalPages ? -1 : undefined}
-                    className={
-                      page >= totalPages ? "pointer-events-none opacity-50" : ""
-                    }
+                  {/* Next button */}
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="sm"
+                    disabled={page >= totalPages}
+                    className="h-8 px-2.5 rounded-lg text-xs gap-1 border-border/60"
                   >
-                    Next
-                    <ChevronRight className="h-3.5 w-3.5" />
-                  </Link>
-                </Button>
-              </div>
+                    <Link
+                      href={page < totalPages ? createPageUrl(page + 1) : "#"}
+                      aria-disabled={page >= totalPages}
+                      tabIndex={page >= totalPages ? -1 : undefined}
+                      className={
+                        page >= totalPages
+                          ? "pointer-events-none opacity-40"
+                          : ""
+                      }
+                    >
+                      <span className="hidden sm:inline">Next</span>
+                      <ChevronRight className="h-3.5 w-3.5" />
+                    </Link>
+                  </Button>
+
+                  {/* Last page button */}
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="icon"
+                    disabled={page >= totalPages}
+                    className="h-8 w-8 rounded-lg border-border/60"
+                    title="Last page"
+                  >
+                    <Link
+                      href={page < totalPages ? createPageUrl(totalPages) : "#"}
+                      aria-disabled={page >= totalPages}
+                      tabIndex={page >= totalPages ? -1 : undefined}
+                      className={
+                        page >= totalPages
+                          ? "pointer-events-none opacity-40"
+                          : ""
+                      }
+                    >
+                      <ChevronsRight className="h-3.5 w-3.5" />
+                      <span className="sr-only">Last page</span>
+                    </Link>
+                  </Button>
+                </div>
+              </nav>
             )}
           </div>
         ) : (
@@ -210,12 +338,14 @@ export default async function PropertiesPage({
             </div>
             <div className="space-y-1 max-w-md mx-auto">
               <h3 className="font-heading text-lg font-bold text-foreground">
-                No matching rooms or properties found
+                {page > 1
+                  ? "No more properties on this page"
+                  : "No matching rooms or properties found"}
               </h3>
               <p className="text-xs text-muted-foreground">
-                We couldn&apos;t find any listings matching your active filters.
-                Try adjusting your budget, selecting &quot;All Cities&quot;, or
-                clearing search keywords.
+                {page > 1
+                  ? `You are on page ${page}, but no listings were returned. Try returning to page 1.`
+                  : 'We couldn\'t find any listings matching your active filters. Try adjusting your budget, selecting "All Cities", or clearing search keywords.'}
               </p>
             </div>
             <Button
@@ -224,7 +354,9 @@ export default async function PropertiesPage({
               size="sm"
               className="rounded-xl text-xs"
             >
-              <Link href="/properties">Reset All Filters</Link>
+              <Link href={page > 1 ? createPageUrl(1) : "/properties"}>
+                {page > 1 ? "Go to Page 1" : "Reset All Filters"}
+              </Link>
             </Button>
           </div>
         )}
